@@ -3,6 +3,7 @@ from pages.periodicals import periodicals
 from pages.categories import categories
 from pages.overview import overview
 from pages.income import income
+from database import database
 
 from tkinter import ttk
 import tkinter as tk
@@ -14,9 +15,7 @@ global_thing = "test"
 class root:
     def __init__(self):
 
-        self.cats = []
-        self.data = []
-
+        self.mysql = database()
 
         # Intialize root window
         self.window = tk.Tk()

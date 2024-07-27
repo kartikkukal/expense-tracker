@@ -39,6 +39,8 @@ class transactions:
 
         self.tree.configure(yscrollcommand=scrollbar.set)
 
+        self.tree.bind("<Double-1>", self.test)
+
         # Create sort by option menu
         ttk.Label(self.controls, text="Sort by: ").pack(side=tk.LEFT, padx=20, pady=10)
 
@@ -60,18 +62,28 @@ class transactions:
         # Add create transaction button
         ttk.Button(self.controls, text="Create transaction", command=self.transaction.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=20, pady=10)
 
-        index = 0
-
-        for record in root.data:
-            self.tree.insert("", "end", iid=index, text=record[0], values=(record[1], record[2], record[3]))
-            self.tree.insert(index, "end", values=(record[4],))
-            index += 1
+        self.update_transactions()
 
 
     def select_sort_option(self, *args):
-        index = self.sort_by_options.index(self.sort_by_select.get())
-        print(index, self.sort_by_options[index])
+
+        self.update_transactions()
     
     def select_time_range(self, *args):
-        index = self.time_range_options.index(self.time_range_select.get())
-        print(index, self.time_range_options[index])
+
+        self.update_transactions()
+    
+    def update_transactions(self):
+
+        self.tree.delete(*self.tree.get_children())
+
+        records = self.root.mysql.get_transactions(self.sort_by_options.index(self.sort_by_select.get()), self.time_range_options.index(self.time_range_select.get()))
+        
+        for record in records:
+            self.tree.insert("", "end", iid=record[0], text=record[1], values=(record[2], record[3], record[4]))
+            if len(record) > 4:
+                self.tree.insert(record[0], "end", values=(record[5],))
+    
+    def test(self, event):
+        iid = self.tree.identify_row(event.y)
+        print(iid)
