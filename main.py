@@ -23,6 +23,10 @@ class root:
         self.window.geometry("860x540")
         self.window.resizable(False, False)
 
+        # List of functions to run on update
+
+        self.updates = []
+
         # Intialize root frame
         self.frame = ttk.Frame(self.window)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -56,6 +60,10 @@ class root:
         sv_ttk._load_theme(style)
         style.theme_use("sun-valley-dark")
         self.window.mainloop()
+    
+    def update(self):
+        for function in self.updates:
+            function()
 
 def __main__():
     window = root()

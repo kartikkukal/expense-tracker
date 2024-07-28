@@ -10,6 +10,8 @@ import sv_ttk
 class overview:
     def __init__(self, root):
 
+        self.root = root
+
         # Initialize frames
         self.frame = ttk.Frame(root.notebook, padding=5)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -32,10 +34,38 @@ class overview:
         self.transactions.grid(row=1, column=0, padx=padding_x, pady=padding_y, sticky="news")
         self.periodicals.grid(row=1, column=1, padx=padding_x, pady=padding_y, sticky="news")
 
-        self.categories_chart()
+        self.root.updates.append(self.categories_chart_update)
 
+        self.categories_chart_create()
+        self.all_charts()
 
-    def categories_chart(self):
+    def categories_chart_create(self):
+
+        data = self.root.mysql.category_spending()
+
+        mpl.rcParams["text.color"] = "white"
+        mpl.rcParams["font.size"] = "15"
+
+        figure = Figure(dpi=45, facecolor="#1c1c1c", figsize=(9, 4.8))        
+        figure.add_subplot().pie(data[1], radius=1.2, labels=data[0])
+
+        self.categories_chart = FigureCanvasTkAgg(figure, self.categories).get_tk_widget()
+        self.categories_chart.pack()
+
+    def categories_chart_update(self):
+
+        data = self.root.mysql.category_spending()
+
+        self.categories_chart.destroy()
+
+        figure = Figure(dpi=45, facecolor="#1c1c1c", figsize=(9, 4.8))        
+        figure.add_subplot().pie(data[1], radius=1.2, labels=data[0])
+
+        self.categories_chart = FigureCanvasTkAgg(figure, self.categories).get_tk_widget()
+        self.categories_chart.pack()
+        
+
+    def all_charts(self):
         categories = ["Food & Beverages", "Rent", "Repairs", "Purchases", "EMIs"]
         values = [144, 352, 664, 332, 66]
 
@@ -43,14 +73,11 @@ class overview:
         mpl.rcParams["font.size"] = "15"
 
         figure = Figure(dpi=45, facecolor="#1c1c1c", figsize=(9, 4.8))
-        canvas = FigureCanvasTkAgg(figure, self.categories)
+        canvas = FigureCanvasTkAgg(figure, self.income)
         canvas.get_tk_widget().config()
         axes = figure.add_subplot()
 
         axes.pie(values, radius=1.2, labels=categories)
-
-        chart = FigureCanvasTkAgg(figure, self.categories)
-        chart.get_tk_widget().pack()
 
         chart = FigureCanvasTkAgg(figure, self.income)
         chart.get_tk_widget().pack()

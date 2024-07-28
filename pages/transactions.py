@@ -2,6 +2,7 @@ from tkinter import ttk
 import tkinter as tk
 
 from dialogs.create_transaction import create_transaction
+from dialogs.view_transaction import view_transaction
 
 class transactions:
     def __init__(self, root):
@@ -57,11 +58,13 @@ class transactions:
 
         ttk.OptionMenu(self.controls, self.time_range_select, self.time_range_options[0], *self.time_range_options, command=self.select_time_range).pack(side=tk.LEFT, padx=0, pady=10, ipadx=15)
 
-        self.transaction = create_transaction(root)
+        self.create_transaction = create_transaction(root)
+        self.view_transaction = view_transaction(root)
 
         # Add create transaction button
-        ttk.Button(self.controls, text="Create transaction", command=self.transaction.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=20, pady=10)
+        ttk.Button(self.controls, text="Create transaction", command=self.create_transaction.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=20, pady=10)
 
+        self.root.updates.append(self.update_transactions)
         self.update_transactions()
 
 
@@ -81,9 +84,8 @@ class transactions:
         
         for record in records:
             self.tree.insert("", "end", iid=record[0], text=record[1], values=(record[2], record[3], record[4]))
-            if len(record) > 4:
-                self.tree.insert(record[0], "end", values=(record[5],))
     
     def test(self, event):
         iid = self.tree.identify_row(event.y)
-        print(iid)
+        self.view_transaction.run(iid)
+        
