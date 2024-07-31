@@ -20,17 +20,17 @@ class database:
             
             self.connection.commit()
 
-        if ("transactions", ) not in tables:
-            self.cursor.execute("CREATE TABLE transactions (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Category INT REFERENCES categories(ID), Amount INT NOT NULL, Additional VARCHAR(100))")
+        if ("expenses", ) not in tables:
+            self.cursor.execute("CREATE TABLE expenses (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Category INT REFERENCES categories(ID), Amount INT NOT NULL, Additional VARCHAR(100))")
         
 
-    def create_transaction(self, date_time, note, category, amount, additional):
+    def add_expense(self, date_time, note, category, amount, additional):
         
-        self.cursor.execute("INSERT INTO transactions (Date_Time, Note, Category, Amount, Additional) VALUES(%s, %s, %s, %s, %s)", (date_time, note, category, amount, additional))
+        self.cursor.execute("INSERT INTO expenses (Date_Time, Note, Category, Amount, Additional) VALUES(%s, %s, %s, %s, %s)", (date_time, note, category, amount, additional))
 
         self.connection.commit()
     
-    def get_transactions(self, order, range):
+    def get_expenses(self, order, range):
 
         now = datetime.datetime.now()
         delta = datetime.timedelta(days=1)
@@ -53,21 +53,28 @@ class database:
         if order == 1:
             order_string = "ASC"
         
-        self.cursor.execute("SELECT transactions.ID, transactions.Date_Time, transactions.Note, categories.Name AS Category, transactions.Amount, transactions.Additional FROM transactions, categories WHERE transactions.Category = categories.ID AND transactions.Date_Time > %s ORDER BY transactions.Date_Time " + order_string + ", transactions.ID " + order_string, (start.strftime("%Y-%m-%d %H:%M:%S"),))
+        self.cursor.execute("SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses, categories WHERE expenses.Category = categories.ID AND expenses.Date_Time > %s ORDER BY expenses.Date_Time " + order_string + ", expenses.ID " + order_string, (start.strftime("%Y-%m-%d %H:%M:%S"),))
         records = self.cursor.fetchall()
 
         return records
     
-    def get_transaction(self, id):
+    def get_expense(self, id):
 
-        self.cursor.execute("SELECT * FROM transactions WHERE ID=%s", (id, ))
+        self.cursor.execute("SELECT * FROM expenses WHERE ID=%s", (id, ))
         record = self.cursor.fetchone()
 
         return record
     
-    def update_transaction(self, id, record):
+    def get_expense_by_category(self, id):
 
-        self.cursor.execute("UPDATE transactions SET Date_Time=%s, Note=%s, Category=%s, Amount=%s, Additional=%s WHERE ID=%s", (record[0], record[1], record[2], record[3], record[4], id))
+        self.cursor.execute("SELECT * FROM expenses WHERE category = %s", (id, ))
+        records = self.cursor.fetchall()
+
+        return records
+    
+    def update_expense(self, id, record):
+
+        self.cursor.execute("UPDATE expenses SET Date_Time=%s, Note=%s, Category=%s, Amount=%s, Additional=%s WHERE ID=%s", (record[0], record[1], record[2], record[3], record[4], id))
         self.connection.commit()
     
     def create_category(self, name):
@@ -82,15 +89,21 @@ class database:
 
         return records
     
-    def category_spending(self):
+    def get_category_id(self, name):
 
-        self.cursor.execute("SELECT categories.Name, SUM(transactions.Amount) AS Amount FROM transactions JOIN categories ON transactions.Category = categories.ID GROUP BY categories.Name")
+        self.cursor.execute("SELECT ID FROM categories WHERE Name = %s", (name, ))
+        record = self.cursor.fetchone()
 
-        data = self.cursor.fetchall()
+        return record
+    
+    def category_spending(self, order = 0):
+
+        query = "SELECT categories.Name, SUM(expenses.Amount) AS Amount FROM expenses JOIN categories ON expenses.Category = categories.ID GROUP BY categories.Name ORDER BY SUM(expenses.Amount)"
         
-        if len(data) == 0:
-            return ("No transactions", ), (1, )
+        if order == 0:
+            query += " DESC"
 
-        label, amount = zip(*data)
+        self.cursor.execute(query)
+        data = self.cursor.fetchall()
 
-        return label, amount
+        return data

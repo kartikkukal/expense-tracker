@@ -1,10 +1,10 @@
 from tkinter import ttk
 import tkinter as tk
 
-from dialogs.create_transaction import create_transaction
-from dialogs.view_transaction import view_transaction
+from dialogs.add_expense import add_expense
+from dialogs.view_expense import view_expense
 
-class transactions:
+class expenses:
     def __init__(self, root):
 
         self.root = root
@@ -58,34 +58,34 @@ class transactions:
 
         ttk.OptionMenu(self.controls, self.time_range_select, self.time_range_options[0], *self.time_range_options, command=self.select_time_range).pack(side=tk.LEFT, padx=0, pady=10, ipadx=15)
 
-        self.create_transaction = create_transaction(root)
-        self.view_transaction = view_transaction(root)
+        self.add_expense = add_expense(root)
+        self.view_expense = view_expense(root)
 
         # Add create transaction button
-        ttk.Button(self.controls, text="Create transaction", command=self.create_transaction.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=20, pady=10)
+        ttk.Button(self.controls, text="Create transaction", command=self.add_expense.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=20, pady=10)
 
-        self.root.updates.append(self.update_transactions)
-        self.update_transactions()
+        self.root.expenses_update.append(self.update_expenses)
+        self.update_expenses()
 
 
     def select_sort_option(self, *args):
 
-        self.update_transactions()
+        self.update_expenses()
     
     def select_time_range(self, *args):
 
-        self.update_transactions()
+        self.update_expenses()
     
-    def update_transactions(self):
+    def update_expenses(self):
 
         self.tree.delete(*self.tree.get_children())
 
-        records = self.root.mysql.get_transactions(self.sort_by_options.index(self.sort_by_select.get()), self.time_range_options.index(self.time_range_select.get()))
+        records = self.root.mysql.get_expenses(self.sort_by_options.index(self.sort_by_select.get()), self.time_range_options.index(self.time_range_select.get()))
         
         for record in records:
             self.tree.insert("", "end", iid=record[0], text=record[1], values=(record[2], record[3], record[4]))
     
     def test(self, event):
         iid = self.tree.identify_row(event.y)
-        self.view_transaction.run(iid)
+        self.view_expense.run(iid)
         

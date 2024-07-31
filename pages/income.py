@@ -8,11 +8,11 @@ class income:
         self.frame = ttk.Frame(root.notebook, padding=5)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.rowconfigure(1, weight=0)
-        self.frame.columnconfigure(tuple(range(2)), weight=1)
+        self.frame.rowconfigure(0, weight=3)
+        self.frame.rowconfigure(1, weight=1)
+        self.frame.columnconfigure(tuple(range(2)), weight=1, uniform="fred")
         
-        self.categories = ttk.LabelFrame(self.frame, text="Catergories")
+        self.wallet_frame = ttk.Frame(self.frame)
         self.income = ttk.LabelFrame(self.frame, text="Income")
         
         self.list = ttk.Frame(self.frame)
@@ -20,54 +20,70 @@ class income:
         padding_x = 5
         padding_y = 5
         
-        self.categories.grid(row=0, column=0, padx=padding_x, pady=padding_y, sticky="news")
+        self.wallet_frame.grid(row=0, column=0, padx=padding_x, pady=padding_y, sticky="news")
         self.income.grid(row=0, column=1, padx=padding_x, pady=padding_y, sticky="news")
         self.list.grid(row=1, column=0, columnspan=2, padx=padding_x, pady=padding_y, sticky="news")
 
-        self.controls = ttk.Frame(self.list)
-        self.controls.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
+        self.wallets = ttk.Treeview(self.wallet_frame, columns=("amount"))
+        self.wallets.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.wallets.heading("#0", text="Wallet")
+        self.wallets.column("#0", width=1)
+        self.wallets.heading("amount", text="Amount")
+        self.wallets.column("amount", width=1)
+
+        scrollbar = ttk.Scrollbar(self.wallet_frame, orient=tk.VERTICAL, command=self.wallets.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.wallets.configure(yscrollcommand=scrollbar.set)
+
+
+        self.income.grid_rowconfigure(tuple(range(2)), weight=1)
+        self.income.grid_columnconfigure(0, weight=1)
+
+        ttk.Label(self.income, text="Current balance: ", font=('Arial', 12)).grid(row=0, column=0, sticky="S")
+        self.balance = ttk.Label(self.income, text="23,233$", font=('Arial', 32))
+        self.balance.grid(row=1, column=0, sticky="N", pady=(8, 0))
+
+        income_controls = ttk.Frame(self.list)
+        income_controls.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
 
         # Create sort by option menu
-        ttk.Label(self.controls, text="Sort by: ").pack(side=tk.LEFT, padx=20)
+        ttk.Label(income_controls, text="Sort by: ").pack(side=tk.LEFT, padx=20)
 
         self.sort_by_options = ("Newest first", "Oldest first")
         self.sort_by_select = tk.StringVar(value=self.sort_by_options[0])
 
-        ttk.OptionMenu(self.controls, self.sort_by_select, self.sort_by_options[0], *self.sort_by_options, command=self.select_sort_option).pack(side=tk.LEFT, padx=0, ipadx=15)
-
-        # Create time range option menu
-        ttk.Label(self.controls, text="Time range: ").pack(side=tk.LEFT, padx=20)
-
-        self.time_range_options = ("1 day", "7 days", "31 days", "90 days", "180 days", "1 Year")
-        self.time_range_select = tk.StringVar(value=self.time_range_options[2])
-
-        ttk.OptionMenu(self.controls, self.time_range_select, self.time_range_options[0], *self.time_range_options, command=self.select_time_range).pack(side=tk.LEFT, padx=0, ipadx=15)
+        ttk.OptionMenu(income_controls, self.sort_by_select, self.sort_by_options[0], *self.sort_by_options, command=self.select_sort_option).pack(side=tk.LEFT, padx=0, ipadx=15)
 
         # Add create transaction button
-        ttk.Button(self.controls, text="Create transaction", command=self.button_create_transaction, style="Accent.TButton").pack(side=tk.RIGHT, padx=20)
+        ttk.Button(income_controls, text="Add Income", command=self.button_add_expense, style="Accent.TButton").pack(side=tk.RIGHT, padx=(0, 25))
+
+        # Add create wallet button
+        ttk.Button(income_controls, text="Create Wallet").pack(side=tk.RIGHT, padx=15)
 
         # Add TreeView
-        self.tree = ttk.Treeview(self.list, columns=("note", "category", "amount"))
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.income = ttk.Treeview(self.list, columns=("note", "wallet", "amount"))
+        self.income.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        self.tree.heading("#0", text="Date/Time")
-        self.tree.column("#0", width=80)
+        self.income.heading("#0", text="Date/Time")
+        self.income.column("#0", width=80)
 
-        self.tree.heading("note", text="Note")
+        self.income.heading("note", text="Note")
 
-        self.tree.heading("category", text="Category")
-        self.tree.column("category", width=40)
+        self.income.heading("wallet", text="Wallet")
+        self.income.column("wallet", width=40)
 
-        self.tree.heading("amount", text="Amount")
-        self.tree.column("amount", width=40, anchor=tk.CENTER)
+        self.income.heading("amount", text="Amount")
+        self.income.column("amount", width=40, anchor=tk.CENTER)
 
         # Scrollbar with TreeView
-        scrollbar = ttk.Scrollbar(self.list, orient=tk.VERTICAL, command=self.tree.yview)
+        scrollbar = ttk.Scrollbar(self.list, orient=tk.VERTICAL, command=self.income.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.income.configure(yscrollcommand=scrollbar.set)
 
-    def button_create_transaction(self):
+    def button_add_expense(self):
         print("Create transaction button pressed.")
 
     def select_sort_option(self, *args):

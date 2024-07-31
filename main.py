@@ -1,7 +1,7 @@
-from pages.transactions import transactions
 from pages.periodicals import periodicals
 from pages.categories import categories
 from pages.overview import overview
+from pages.expenses import expenses
 from pages.income import income
 from database import database
 
@@ -9,8 +9,6 @@ from tkinter import ttk
 import tkinter as tk
 
 import sv_ttk
-
-global_thing = "test"
 
 class root:
     def __init__(self):
@@ -24,8 +22,8 @@ class root:
         self.window.resizable(False, False)
 
         # List of functions to run on update
-
-        self.updates = []
+        self.expenses_update = []
+        self.income_update = []
 
         # Intialize root frame
         self.frame = ttk.Frame(self.window)
@@ -39,30 +37,28 @@ class root:
         self.overview = overview(self)
         self.notebook.add(self.overview.frame, text="Overview")
 
-        # Initialize transactions
-        self.transactions = transactions(self)
-        self.notebook.add(self.transactions.frame, text="Transactions")
+        # Initialize expenses
+        self.expenses = expenses(self)
+        self.notebook.add(self.expenses.frame, text="Expenses")
 
         # Initialize income
         self.income = income(self)
         self.notebook.add(self.income.frame, text="Income")
 
-        # Initialize periodicals
-        self.periodicals = periodicals(self)
-        self.notebook.add(self.periodicals.frame, text="Periodicals")
-
         # Initialize categories
         self.categories = categories(self)
         self.notebook.add(self.categories.frame, text="Categories")
 
+        # Initialize periodicals
+        self.periodicals = periodicals(self)
+        self.notebook.add(self.periodicals.frame, text="Periodicals")
+
     def run(self):
-        style = ttk.Style()
-        sv_ttk._load_theme(style)
-        style.theme_use("sun-valley-dark")
+        sv_ttk.set_theme("dark")
         self.window.mainloop()
     
-    def update(self):
-        for function in self.updates:
+    def event_expenses_update(self):
+        for function in self.expenses_update:
             function()
 
 def __main__():
