@@ -8,22 +8,28 @@ class periodicals:
         self.frame = ttk.Frame(root.notebook, padding="5")
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.controls = ttk.Frame(self.frame)
-        self.controls.pack(side=tk.TOP, fill=tk.X, pady=(5, 0), padx=10)
+        controls = ttk.Frame(self.frame)
+        controls.pack(side=tk.TOP, fill=tk.X, pady=(5, 0), padx=10)
 
-        ttk.Button(self.controls, text="Add periodical").pack(side=tk.RIGHT)
+        ttk.Button(controls, text="Add periodical").pack(side=tk.RIGHT)
 
-        self.views = ttk.Frame(self.frame)
-        self.views.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        views = ttk.Frame(self.frame)
+        views.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.views.rowconfigure(0, weight=1)
-        self.views.columnconfigure(tuple(range(2)), weight=1, uniform="fred")
+        views.rowconfigure(0, weight=1)
+        views.columnconfigure(tuple(range(2)), weight=1, uniform="fred")
 
-        self.income = ttk.Treeview(self.views, columns=("frequency", "till"))
-        self.expense = ttk.Treeview(self.views, columns=("frequency", "till"))
+        income = ttk.Frame(views)
+        expense = ttk.Frame(views)
+        
+        income.grid(row=0, column=0, padx=5, pady=5, sticky="news")
+        expense.grid(row=0, column=1, padx=5, pady=5, sticky="news")
 
-        self.income.grid(row=0, column=0, padx=5, pady=5, sticky="news")
-        self.expense.grid(row=0, column=1, padx=5, pady=5, sticky="news")
+        self.income = ttk.Treeview(income, columns=("frequency", "till"))
+        self.expense = ttk.Treeview(expense, columns=("frequency", "till"))
+
+        self.income.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.expense.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.income.heading("#0", text="Title")
         self.income.heading("frequency", text="Frequency")
@@ -40,3 +46,9 @@ class periodicals:
         self.expense.column("#0", width=1)
         self.expense.column("frequency", width=1)
         self.expense.column("till", width=1)
+
+        scrollbar = ttk.Scrollbar(income, orient=tk.VERTICAL, command=self.income.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        scrollbar = ttk.Scrollbar(expense, orient=tk.VERTICAL, command=self.expense.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)

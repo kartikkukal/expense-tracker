@@ -4,7 +4,7 @@ import tkinter as tk
 import datetime
 import zoneinfo
 
-class AddExpense:
+class AddIncome:
 
     def __init__(self, root):
         self.root = root
@@ -13,7 +13,7 @@ class AddExpense:
 
         # Toplevel dialog frame
         self.dialog = tk.Toplevel()
-        self.dialog.title("Add Expense")
+        self.dialog.title("Add Income")
 
         self.dialog.geometry("640x240")
         self.dialog.resizable(False, False)
@@ -29,32 +29,28 @@ class AddExpense:
 
         self.note = tk.StringVar(frame)
         ttk.Entry(frame, textvariable=self.note).grid(row=0, column=1, columnspan=4, sticky="EW", pady=(0, 10))
+    
+        # Additional entry
+        ttk.Label(frame, text="Additional:").grid(row=1, column=0, pady=(0, 10))        
+
+        self.additional = tk.StringVar(frame)
+        ttk.Entry(frame, textvariable=self.additional).grid(row=1, column=1, columnspan=4, sticky="EW", pady=(0, 10))
 
         # Wallet entry
-        ttk.Label(frame, text="Wallet:").grid(row=1, column=0, pady=(0, 10))
+        ttk.Label(frame, text="Wallet:").grid(row=2, column=0, pady=(0, 10))
 
         self.wallets = self.root.mysql.all_wallets()
         self.wallets = [value for row in self.wallets for value in row]
         self.wallet = tk.StringVar(value=self.wallets[0])
         
         ttk.OptionMenu(frame, self.wallet, self.wallets[0],
-                        *self.wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
-
-        # Category entry
-        ttk.Label(frame, text="Category:").grid(row=1, column=2, pady=(0, 10))
+                        *self.wallets).grid(row=2, column=1, sticky="EW", pady=(0, 10))
         
-        self.categories = self.root.mysql.all_categories()
-        self.categories = [value for row in self.categories for value in row]
-        self.category = tk.StringVar(value="")
-        
-        (ttk.OptionMenu(frame, self.category, None, *self.categories)
-         .grid(row=1, column=3, columnspan=2, sticky="EW", pady=(0, 10)))
-    
-        # Additional entry
-        ttk.Label(frame, text="Additional:").grid(row=2, column=0, pady=(0, 10))        
+        # Amount entry
+        ttk.Label(frame, text="Amount:").grid(row=2, column=2, padx=8, pady=(0, 10))
 
-        self.additional = tk.StringVar(frame)
-        ttk.Entry(frame, textvariable=self.additional).grid(row=2, column=1, columnspan=4, sticky="EW", pady=(0, 10))
+        self.amount = tk.StringVar(frame)
+        ttk.Entry(frame, width=6, textvariable=self.amount).grid(row=2, column=3, columnspan=2, sticky="EW", pady=(0, 10))
 
         # Date entry
         ttk.Label(frame, text="Date:").grid(row=3, column=0)
@@ -93,12 +89,6 @@ class AddExpense:
         self.minute = tk.StringVar(time_frame, value=current_time.minute)
         ttk.Entry(time_frame, width=2, textvariable=self.minute).grid(row=0, column=2, sticky="EW")
 
-        # Amount entry
-        ttk.Label(frame, text="Amount:").grid(row=3, column=3, padx=8)
-
-        self.amount = tk.StringVar(frame)
-        ttk.Entry(frame, width=6, textvariable=self.amount).grid(row=3, column=4, sticky="EW")
-
         # Buttons frame
         button_frame = ttk.Frame(frame, padding="0 30 0 0")
         button_frame.grid(row=4, column=0, columnspan=5, sticky="EW",)
@@ -106,7 +96,7 @@ class AddExpense:
         ttk.Button(button_frame, text="Cancel", width=10, command=self.dialog.destroy).pack(side=tk.RIGHT)
 
         ttk.Button(button_frame, text="Create", width=10, 
-                   style="Accent.TButton", command=self.add_expense).pack(side=tk.RIGHT, padx=(0, 10))
+                   style="Accent.TButton", command=self.add_income).pack(side=tk.RIGHT, padx=(0, 10))
 
         # Show dialog
         self.dialog.transient(master=self.root.notebook)
@@ -115,7 +105,7 @@ class AddExpense:
         # Wait for dialog to close
         self.root.notebook.wait_window(self.dialog)
 
-    def add_expense(self):
+    def add_income(self):
         
         try:
             note = self.note.get()
@@ -125,7 +115,6 @@ class AddExpense:
             amount = self.amount.get()
             
             wallet = self.wallets.index(self.wallet.get()) + 1
-            category = self.categories.index(self.category.get()) + 1
 
             additional = self.additional.get()
 
@@ -139,8 +128,8 @@ class AddExpense:
             date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
 
             # Add expense record
-            self.root.mysql.add_expense((date_time, note, wallet, category, amount, additional))
-            self.root.event_expenses_update()
+            self.root.mysql.add_income((date_time, note, wallet, amount, additional))
+            self.root.event_income_update()
 
             self.dialog.destroy()
         

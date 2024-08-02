@@ -1,9 +1,9 @@
 from pages.periodicals import periodicals
-from pages.categories import categories
+from pages.categories import Categories
 from pages.overview import overview
-from pages.expenses import expenses
-from pages.income import income
-from database import database
+from pages.expenses import Expenses
+from pages.income import Income
+from database import Database
 
 from tkinter import ttk
 import tkinter as tk
@@ -13,17 +13,17 @@ import sv_ttk
 class root:
     def __init__(self):
 
-        self.mysql = database()
+        self.mysql = Database()
 
         # Intialize root window
         self.window = tk.Tk()
         self.window.title("Expense Tracker")
         self.window.geometry("860x540")
-        self.window.resizable(False, False)
 
         # List of functions to run on update
         self.expenses_update = []
         self.income_update = []
+        self.wallet_update = []
 
         # Intialize root frame
         self.frame = ttk.Frame(self.window)
@@ -38,15 +38,15 @@ class root:
         self.notebook.add(self.overview.frame, text="Overview")
 
         # Initialize expenses
-        self.expenses = expenses(self)
+        self.expenses = Expenses(self)
         self.notebook.add(self.expenses.frame, text="Expenses")
 
         # Initialize income
-        self.income = income(self)
+        self.income = Income(self)
         self.notebook.add(self.income.frame, text="Income")
 
         # Initialize categories
-        self.categories = categories(self)
+        self.categories = Categories(self)
         self.notebook.add(self.categories.frame, text="Categories")
 
         # Initialize periodicals
@@ -59,6 +59,14 @@ class root:
     
     def event_expenses_update(self):
         for function in self.expenses_update:
+            function()
+    
+    def event_income_update(self):
+        for function in self.income_update:
+            function()
+    
+    def event_wallet_update(self):
+        for function in self.wallet_update:
             function()
 
 def __main__():

@@ -1,69 +1,88 @@
 from tkinter import ttk
 import tkinter as tk
 
-class income:
+import matplotlib as mpl
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from dialogs.add_income import AddIncome
+from dialogs.create_wallet import create_wallet
+from dialogs.view_wallet import view_wallet
+
+class Income:
+
     def __init__(self, root):
 
-        # Initialize frames
+        self.root = root
+
+        # Initialize root frame
         self.frame = ttk.Frame(root.notebook, padding=5)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.frame.rowconfigure(0, weight=3)
-        self.frame.rowconfigure(1, weight=1)
+        self.frame.rowconfigure(tuple(range(2)), weight=1)
         self.frame.columnconfigure(tuple(range(2)), weight=1, uniform="fred")
         
-        self.wallet_frame = ttk.Frame(self.frame)
-        self.income = ttk.LabelFrame(self.frame, text="Income")
+        # Initialize frames
+        wallets = ttk.Frame(self.frame)
+        income = ttk.Frame(self.frame)
+        self.statistics = ttk.LabelFrame(self.frame, text="Balance")
         
-        self.list = ttk.Frame(self.frame)
-        
-        padding_x = 5
-        padding_y = 5
-        
-        self.wallet_frame.grid(row=0, column=0, padx=padding_x, pady=padding_y, sticky="news")
-        self.income.grid(row=0, column=1, padx=padding_x, pady=padding_y, sticky="news")
-        self.list.grid(row=1, column=0, columnspan=2, padx=padding_x, pady=padding_y, sticky="news")
+        wallets.grid(row=0, column=0, padx=5, pady=5, sticky="news")
+        self.statistics.grid(row=0, column=1, padx=5, pady=5, sticky="news")
+        income.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="news")
 
-        self.wallets = ttk.Treeview(self.wallet_frame, columns=("amount"))
+        # Wallets treeview
+        self.wallets = ttk.Treeview(wallets, columns=("balance"))
         self.wallets.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.wallets.heading("#0", text="Wallet")
         self.wallets.column("#0", width=1)
-        self.wallets.heading("amount", text="Amount")
-        self.wallets.column("amount", width=1)
+        self.wallets.heading("balance", text="Balance")
+        self.wallets.column("balance", width=1)
 
-        scrollbar = ttk.Scrollbar(self.wallet_frame, orient=tk.VERTICAL, command=self.wallets.yview)
+        # Scrollbar for treeview
+        scrollbar = ttk.Scrollbar(wallets, orient=tk.VERTICAL, command=self.wallets.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Create view wallet dialog
+        self.view_wallet = view_wallet(root)
+
+        # Bind double click event and scrollbar
         self.wallets.configure(yscrollcommand=scrollbar.set)
+        self.wallets.bind("<Double-1>", self.wallet_selected)
 
+        # Configure grid for statistics frame
+        self.statistics.grid_rowconfigure(0, weight=1)
+        self.statistics.grid_columnconfigure(0, weight=1)
 
-        self.income.grid_rowconfigure(tuple(range(2)), weight=1)
-        self.income.grid_columnconfigure(0, weight=1)
+        self.chart = None
 
-        ttk.Label(self.income, text="Current balance: ", font=('Arial', 12)).grid(row=0, column=0, sticky="S")
-        self.balance = ttk.Label(self.income, text="23,233$", font=('Arial', 32))
-        self.balance.grid(row=1, column=0, sticky="N", pady=(8, 0))
+        # Controls for income view
+        controls = ttk.Frame(income)
+        controls.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
 
-        income_controls = ttk.Frame(self.list)
-        income_controls.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
-
-        # Create sort by option menu
-        ttk.Label(income_controls, text="Sort by: ").pack(side=tk.LEFT, padx=20)
+        # Sort by drop down
+        ttk.Label(controls, text="Sort by: ").pack(side=tk.LEFT, padx=20)
 
         self.sort_by_options = ("Newest first", "Oldest first")
         self.sort_by_select = tk.StringVar(value=self.sort_by_options[0])
 
-        ttk.OptionMenu(income_controls, self.sort_by_select, self.sort_by_options[0], *self.sort_by_options, command=self.select_sort_option).pack(side=tk.LEFT, padx=0, ipadx=15)
+        ttk.OptionMenu(controls, self.sort_by_select, self.sort_by_options[0], *self.sort_by_options, command=lambda _ : self.update_income()).pack(side=tk.LEFT, ipadx=8)
 
-        # Add create transaction button
-        ttk.Button(income_controls, text="Add Income", command=self.button_add_expense, style="Accent.TButton").pack(side=tk.RIGHT, padx=(0, 25))
+        # Create add income dialog
+        self.add_income = AddIncome(root)
 
-        # Add create wallet button
-        ttk.Button(income_controls, text="Create Wallet").pack(side=tk.RIGHT, padx=15)
+        # Add income button
+        ttk.Button(controls, text="Add Income", style="Accent.TButton", command=self.add_income.run).pack(side=tk.RIGHT, padx=25)
 
-        # Add TreeView
-        self.income = ttk.Treeview(self.list, columns=("note", "wallet", "amount"))
+        # Create create wallet dialog
+        self.create_wallet = create_wallet(root)
+
+        # Create wallet button
+        ttk.Button(controls, text="Create Wallet", command=self.create_wallet.run).pack(side=tk.RIGHT)
+
+        # Income treeview
+        self.income = ttk.Treeview(income, columns=("note", "wallet", "amount"))
         self.income.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
         self.income.heading("#0", text="Date/Time")
@@ -77,19 +96,88 @@ class income:
         self.income.heading("amount", text="Amount")
         self.income.column("amount", width=40, anchor=tk.CENTER)
 
-        # Scrollbar with TreeView
-        scrollbar = ttk.Scrollbar(self.list, orient=tk.VERTICAL, command=self.income.yview)
+        # Scrollbar for treeview
+        scrollbar = ttk.Scrollbar(income, orient=tk.VERTICAL, command=self.income.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Register scrollbar
         self.income.configure(yscrollcommand=scrollbar.set)
 
-    def button_add_expense(self):
-        print("Create transaction button pressed.")
+        # Register update methods
+        self.root.expenses_update.append(self.update_wallets)
+        self.root.wallet_update.append(self.update_wallets)
+        self.root.income_update.append(self.update_wallets)
 
-    def select_sort_option(self, *args):
-        index = self.sort_by_options.index(self.sort_by_select.get())
-        print(index, self.sort_by_options[index])
+        self.root.expenses_update.append(self.update_statistics)
+        self.root.wallet_update.append(self.update_statistics)
+        self.root.income_update.append(self.update_statistics)
+
+        self.root.income_update.append(self.update_income)
+        
+        self.update_wallets()
+        self.update_income()
+        self.update_statistics()
     
-    def select_time_range(self, *args):
-        index = self.time_range_options.index(self.time_range_select.get())
-        print(index, self.time_range_options[index])
+    def wallet_selected(self, _):
+
+        # Get current focused item
+        current = self.wallets.focus()
+        wallet = self.wallets.item(current)["text"]
+
+        # Run view wallet dialog
+        self.view_wallet.run(wallet)
+    
+    def update_wallets(self):
+
+        # Get balance in each wallet
+        self.balance = dict(self.root.mysql.total_income_by_wallet())
+        wallets = self.root.mysql.all_wallets()
+
+        # Set balance of all wallets
+        for wallet in wallets:
+            if wallet[0] not in self.balance:
+                self.balance[wallet[0]] = 0
+        
+        # Get spending per wallet
+        spending = dict(self.root.mysql.total_expense_by_wallet())
+
+        # Subtract spending from balance
+        for wallet in spending:
+            self.balance[wallet] -= spending[wallet]
+
+        # Update wallets treeview
+        self.wallets.delete(*self.wallets.get_children())
+
+        # Generate data for graph
+
+        for wallet in self.balance:
+            self.wallets.insert("", "end", text=wallet, values=(self.balance[wallet]))
+    
+    def update_statistics(self):
+
+        labels = tuple(self.balance.keys())
+        amount = tuple(self.balance.values())
+
+        # Get absolute value of wallets
+        amount = tuple(map(lambda x : abs(x), amount))
+
+        if self.chart is not None:
+            self.chart.destroy()
+
+        figure = Figure(dpi=45, facecolor="#1c1c1c", figsize=(9, 4.4))        
+        figure.add_subplot().pie(amount, radius=1.2, labels=labels)
+
+        self.chart = FigureCanvasTkAgg(figure, self.statistics).get_tk_widget()
+        self.chart.grid(row=0, column=0)
+    
+    def update_income(self):
+
+        # Get income records
+        order = self.sort_by_options.index(self.sort_by_select.get())
+        records = self.root.mysql.all_income(order)
+
+        # Update income treeview
+        self.income.delete(*self.income.get_children())
+
+        for record in records:
+            self.income.insert("", "end", iid=record[0], text=record[1], values=(record[2], record[3], record[4]))
