@@ -1,7 +1,7 @@
 from tkinter import ttk
 import tkinter as tk
 
-class view_wallet:
+class ViewWallet:
     def __init__(self, root):    
         self.root = root
     
@@ -31,8 +31,14 @@ class view_wallet:
         ttk.Button(button_frame, text="Cancel", command=self.cancel_dialog, width=10).pack(side=tk.RIGHT, padx=(10, 0))
         ttk.Button(button_frame, text="Update", style="Accent.TButton", width=10).pack(side=tk.RIGHT)
 
+        # Set dialog window as transient
         self.dialog.transient(master=self.root.notebook)
+
+        # Wait for visibility and set grab
+        self.dialog.wait_visibility()
         self.dialog.grab_set()
+
+        # Wait for dialog to close
         self.root.notebook.wait_window(self.dialog)
 
     def cancel_dialog(self):

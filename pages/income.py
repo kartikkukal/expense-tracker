@@ -6,8 +6,9 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from dialogs.add_income import AddIncome
-from dialogs.create_wallet import create_wallet
-from dialogs.view_wallet import view_wallet
+from dialogs.create_wallet import CreateWallet
+from dialogs.view_income import ViewIncome
+from dialogs.view_wallet import ViewWallet
 
 class Income:
 
@@ -45,7 +46,7 @@ class Income:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Create view wallet dialog
-        self.view_wallet = view_wallet(root)
+        self.ViewWallet = ViewWallet(root)
 
         # Bind double click event and scrollbar
         self.wallets.configure(yscrollcommand=scrollbar.set)
@@ -64,7 +65,7 @@ class Income:
         # Sort by drop down
         ttk.Label(controls, text="Sort by: ").pack(side=tk.LEFT, padx=20)
 
-        self.sort_by_options = ("Newest first", "Oldest first")
+        self.sort_by_options = ("Newest", "Oldest")
         self.sort_by_select = tk.StringVar(value=self.sort_by_options[0])
 
         ttk.OptionMenu(controls, self.sort_by_select, self.sort_by_options[0], *self.sort_by_options, command=lambda _ : self.update_income()).pack(side=tk.LEFT, ipadx=8)
@@ -76,10 +77,10 @@ class Income:
         ttk.Button(controls, text="Add Income", style="Accent.TButton", command=self.add_income.run).pack(side=tk.RIGHT, padx=25)
 
         # Create create wallet dialog
-        self.create_wallet = create_wallet(root)
+        self.CreateWallet = CreateWallet(root)
 
         # Create wallet button
-        ttk.Button(controls, text="Create Wallet", command=self.create_wallet.run).pack(side=tk.RIGHT)
+        ttk.Button(controls, text="Create Wallet", command=self.CreateWallet.run).pack(side=tk.RIGHT)
 
         # Income treeview
         self.income = ttk.Treeview(income, columns=("note", "wallet", "amount"))
@@ -100,8 +101,12 @@ class Income:
         scrollbar = ttk.Scrollbar(income, orient=tk.VERTICAL, command=self.income.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Register scrollbar
+        # Create view income dialog
+        self.ViewIncome = ViewIncome(root)
+
+        # Bind double click event and scrollbar
         self.income.configure(yscrollcommand=scrollbar.set)
+        self.income.bind("<Double-1>", self.income_selected)
 
         # Register update methods
         self.root.expenses_update.append(self.update_wallets)
@@ -117,6 +122,11 @@ class Income:
         self.update_wallets()
         self.update_income()
         self.update_statistics()
+
+    def income_selected(self, event):
+
+        id = self.income.identify_row(event.y)
+        self.ViewIncome.run(id)
     
     def wallet_selected(self, _):
 
@@ -125,7 +135,7 @@ class Income:
         wallet = self.wallets.item(current)["text"]
 
         # Run view wallet dialog
-        self.view_wallet.run(wallet)
+        self.ViewWallet.run(wallet)
     
     def update_wallets(self):
 
@@ -148,18 +158,23 @@ class Income:
         # Update wallets treeview
         self.wallets.delete(*self.wallets.get_children())
 
-        # Generate data for graph
-
         for wallet in self.balance:
             self.wallets.insert("", "end", text=wallet, values=(self.balance[wallet]))
     
     def update_statistics(self):
 
-        labels = tuple(self.balance.keys())
-        amount = tuple(self.balance.values())
+        balance = {}
 
-        # Get absolute value of wallets
-        amount = tuple(map(lambda x : abs(x), amount))
+        # Remove wallets with zero balance and get absolute value
+        for wallet in self.balance:
+
+            if self.balance[wallet] == 0:
+                continue
+
+            balance[wallet] = abs(self.balance[wallet])
+
+        labels = tuple(balance.keys())
+        amount = tuple(balance.values())
 
         if self.chart is not None:
             self.chart.destroy()

@@ -144,6 +144,5 @@ class AddExpense:
 
             self.dialog.destroy()
         
-        except Exception as e:
-            print(e)
+        except Exception:
             return

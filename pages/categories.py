@@ -15,10 +15,10 @@ class Categories:
         self.frame.columnconfigure(tuple(range(2)), weight=1, uniform="fred")
 
         # Initialize frames
-        expenses = ttk.Frame(self.frame)
+        self.container = ttk.Frame(self.frame)
         categories = ttk.Frame(self.frame)
 
-        expenses.grid(row=0, column=0, padx=5, pady=5, sticky="news")
+        self.container.grid(row=0, column=0, padx=5, pady=5, sticky="news")
         categories.grid(row=0, column=1, padx=5, pady=5, sticky="news")
 
         # Category controls
@@ -55,24 +55,38 @@ class Categories:
         self.categories.configure(yscrollcommand=scrollbar.set)
         self.categories.bind("<ButtonRelease-1>", self.category_selected)
 
-        # Expenses treeview
-        self.expenses = ttk.Treeview(expenses, columns=("amount"))
-        self.expenses.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        self.expenses.heading("#0", text="Note")
-        self.expenses.heading("amount", text="Amount")
+        self.clicked = False
 
-        self.expenses.column("amount", width=1)
-
-        # Scrollbar for treeview
-        scrollbar = ttk.Scrollbar(expenses, orient=tk.VERTICAL, command=self.expenses.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.expenses = ttk.Label(self.container, text="Click on a category to see expenses.")
+        self.expenses.pack(side=tk.TOP, expand=True)
 
         # Register update method
         self.root.expenses_update.append(self.update_categories)
         self.update_categories() 
     
     def category_selected(self, _):
+
+        if not self.clicked:
+
+            self.expenses.destroy()
+
+            # Expenses treeview
+            self.expenses = ttk.Treeview(self.container, columns=("amount"))
+            self.expenses.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            
+            self.expenses.heading("#0", text="Note")
+            self.expenses.heading("amount", text="Amount")
+
+            self.expenses.column("amount", width=1)
+
+            # Scrollbar for treeview
+            scrollbar = ttk.Scrollbar(self.container, orient=tk.VERTICAL, command=self.expenses.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+            # Bind scrollbar
+            self.expenses.configure(yscrollcommand=scrollbar.set)
+
+            self.clicked = True
 
         # Get current focused item
         current = self.categories.focus()

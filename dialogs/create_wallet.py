@@ -1,7 +1,7 @@
 from tkinter import ttk
 import tkinter as tk
 
-class create_wallet:
+class CreateWallet:
     def __init__(self, root):    
         self.root = root
     

@@ -8,6 +8,9 @@ class ViewExpense:
 
     def run(self, id):
 
+        if id == "":
+            return
+
         # Toplevel dialog frame
         self.dialog = tk.Toplevel()
         self.dialog.title("View transaction")
@@ -37,8 +40,7 @@ class ViewExpense:
         self.wallets = [value for row in self.wallets for value in row]
         self.wallet = tk.StringVar(value=self.wallets[self.record[3] - 1])
         
-        ttk.OptionMenu(frame, self.wallet, self.wallets[0],
-                        *self.wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
+        ttk.OptionMenu(frame, self.wallet, None, *self.wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
         
         # Category entry
         ttk.Label(frame, text="Category:").grid(row=1, column=2, pady=(0, 10))
@@ -107,8 +109,11 @@ class ViewExpense:
         ttk.Button(button_frame, text="Cancel", width=10, command=self.dialog.destroy).pack(side=tk.RIGHT)
         ttk.Button(button_frame, text="Update", width=10, style="Accent.TButton", command=self.update_transcation).pack(side=tk.RIGHT, padx=(0, 10))
 
-        # Show dialog
+        # Set dialog window as transient
         self.dialog.transient(master=self.root.notebook)
+
+        # Wait for visibility and set grab
+        self.dialog.wait_visibility()
         self.dialog.grab_set()
 
         # Wait for dialog to close
@@ -124,34 +129,29 @@ class ViewExpense:
         self.dialog.destroy()
 
     def update_transcation(self):
-
-        try:
-            note = self.note.get()
-            if note == "":
-                raise ValueError("Note entry is empty")
-
-            amount = self.amount.get()
             
-            wallet = self.wallets.index(self.wallet.get()) + 1
-            category = self.categories.index(self.category.get()) + 1
+        note = self.note.get()
+        if note == "":
+            raise ValueError("Note entry is empty")
 
-            additional = self.additional.get()
+        amount = self.amount.get()
+        
+        wallet = self.wallets.index(self.wallet.get()) + 1
+        category = self.categories.index(self.category.get()) + 1
 
-            year = int(self.year.get())
-            month = int(self.month.get())
-            day = int(self.day.get())
+        additional = self.additional.get()
 
-            hour = int(self.hour.get())
-            minute = int(self.minute.get())
+        year = int(self.year.get())
+        month = int(self.month.get())
+        day = int(self.day.get())
 
-            date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
+        hour = int(self.hour.get())
+        minute = int(self.minute.get())
 
-            # Update expense record
-            self.root.mysql.update_expense_by_id(self.record[0], (date_time, note, wallet, category, amount, additional))
-            self.root.event_expenses_update()
+        date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
 
-            self.dialog.destroy()
+        # Update expense record
+        self.root.mysql.update_expense_by_id(self.record[0], (date_time, note, wallet, category, amount, additional))
+        self.root.event_expenses_update()
 
-        except Exception as e:
-            print(e)
-            return
+        self.dialog.destroy()

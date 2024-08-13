@@ -131,6 +131,16 @@ class Database:
         self.cursor.execute(query)
         return self.cursor.fetchall()
     
+    def get_income_by_id(self, id):
+
+        self.cursor.execute("SELECT * FROM income WHERE ID = %s", (id, ))
+        return self.cursor.fetchone()
+    
+    def update_income_by_id(self, id, record):
+
+        self.cursor.execute("UPDATE income SET Date_Time=%s, Note=%s, Wallet=%s, Amount=%s, Additional=%s WHERE ID=%s", (record[0], record[1], record[2], record[3], record[4], id))
+        self.connection.commit()
+    
     def total_income_by_wallet(self):
 
         self.cursor.execute("SELECT wallets.Name, SUM(income.Amount) AS Amount FROM income JOIN wallets ON income.Wallet = wallets.ID GROUP BY wallets.Name ORDER BY SUM(income.Amount) DESC")

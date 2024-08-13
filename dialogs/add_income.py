@@ -133,6 +133,5 @@ class AddIncome:
 
             self.dialog.destroy()
         
-        except Exception as e:
-            print(e)
+        except:
             return
