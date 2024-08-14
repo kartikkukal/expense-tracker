@@ -1,11 +1,18 @@
 from tkinter import ttk
 import tkinter as tk
 
+from dialogs.confirmation import Confirmation
+
 class ViewWallet:
     def __init__(self, root):    
         self.root = root
     
     def run(self, name):
+
+        if name == "":
+            return
+        
+        self.id = self.root.mysql.get_wallet_id_by_name(name)[0]
 
         self.dialog = tk.Toplevel()
         self.dialog.title("View wallet")
@@ -27,9 +34,11 @@ class ViewWallet:
         button_frame = ttk.Frame(frame, padding="0 10 0 10")
         button_frame.grid(row=1, column=0, columnspan=2, sticky="EW")
 
-        ttk.Button(button_frame, text="Delete", width=10).pack(side=tk.LEFT, padx=(12, 0))
-        ttk.Button(button_frame, text="Cancel", command=self.cancel_dialog, width=10).pack(side=tk.RIGHT, padx=(10, 0))
-        ttk.Button(button_frame, text="Update", style="Accent.TButton", width=10).pack(side=tk.RIGHT)
+        self.Confirmation = Confirmation(self.root, "This operation will delete all records related to this wallet. Are you sure you want to delete this wallet?", self.delete_wallet)
+
+        ttk.Button(button_frame, text="Delete", command=self.Confirmation.run, width=10).pack(side=tk.LEFT, padx=(12, 0))
+        ttk.Button(button_frame, text="Cancel", command=self.dialog.destroy, width=10).pack(side=tk.RIGHT, padx=(10, 0))
+        ttk.Button(button_frame, text="Update", style="Accent.TButton", command=self.update_wallet, width=10).pack(side=tk.RIGHT)
 
         # Set dialog window as transient
         self.dialog.transient(master=self.root.notebook)
@@ -41,5 +50,27 @@ class ViewWallet:
         # Wait for dialog to close
         self.root.notebook.wait_window(self.dialog)
 
-    def cancel_dialog(self):
+    def delete_wallet(self):
+        
+        self.root.mysql.delete_expense_by_wallet(self.id)
+        self.root.mysql.delete_income_by_wallet(self.id)
+        
+        self.root.mysql.delete_wallet_by_id(self.id)
+
+        self.root.event_expenses_update()
+        self.root.event_income_update()
+        self.root.event_wallet_update()
+
+        self.dialog.destroy()
+
+    def update_wallet(self):
+        
+        name = self.name_entry.get()
+
+        if name == "":
+            return
+        
+        self.root.mysql.update_wallet_by_id(self.id, name)
+        self.root.event_wallet_update()
+
         self.dialog.destroy()

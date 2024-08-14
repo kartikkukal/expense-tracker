@@ -46,12 +46,12 @@ class Database:
     
     def all_expenses(self, order, range, wallet):
 
-        query = "SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses, categories WHERE expenses.Category = categories.ID AND expenses.Date_Time > %s"
+        query = "SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses JOIN categories ON expenses.Category = categories.ID JOIN wallets ON expenses.Wallet = wallets.ID WHERE expenses.Date_Time > %s"
 
         parameters = []
 
-        if wallet > 0:
-            query += " AND expenses.Wallet = %s"
+        if wallet != "All":
+            query += " AND wallets.Name = %s"
             parameters.insert(0, wallet)
 
         ranges = (1, 7, 31, 90, 180, 365)
@@ -106,15 +106,45 @@ class Database:
         self.cursor.execute("DELETE FROM expenses WHERE ID = %s", (id, ))
         self.connection.commit()
     
+    def delete_expense_by_category(self, id):
+
+        self.cursor.execute("DELETE FROM expenses WHERE category=%s", (id, ))
+        self.connection.commit()
+
+    def delete_expense_by_wallet(self, id):
+
+        self.cursor.execute("DELETE FROM expenses WHERE wallet=%s", (id, ))
+        self.connection.commit()
+    
     def create_category(self, name):
         
-        self.cursor.execute("INSERT INTO categories (Name) VALUES (%s)", (name))
+        self.cursor.execute("INSERT INTO categories (Name) VALUES (%s)", (name, ))
         self.connection.commit()
     
     def all_categories(self):
         
         self.cursor.execute("SELECT Name FROM categories ORDER BY ID")
         return self.cursor.fetchall()
+    
+    def get_category_by_id(self, id):
+
+        self.cursor.execute("SELECT Name FROM categories WHERE ID=%s", (id, ))
+        return self.cursor.fetchone()
+    
+    def get_category_id_by_name(self, name):
+
+        self.cursor.execute("SELECT ID FROM categories WHERE Name=%s", (name, ))
+        return self.cursor.fetchone()
+    
+    def update_category_by_id(self, id, name):
+
+        self.cursor.execute("UPDATE categories SET Name=%s WHERE ID=%s", (name, id))
+        self.connection.commit()
+    
+    def delete_category_by_id(self, id):
+
+        self.cursor.execute("DELETE FROM categories WHERE ID=%s", (id, ))
+        self.connection.commit()
     
     def add_income(self, record):
 
@@ -123,10 +153,12 @@ class Database:
     
     def all_income(self, order):
 
-        query = "SELECT income.ID, income.Date_Time, income.Note, wallets.Name AS Wallet, income.Amount, income.Additional FROM income, wallets WHERE income.Wallet = wallets.ID ORDER BY income.Date_Time"
+        query = "SELECT income.ID, income.Date_Time, income.Note, wallets.Name AS Wallet, income.Amount, income.Additional FROM income, wallets WHERE income.Wallet = wallets.ID ORDER BY income.Date_Time {}, income.ID {}"
 
         if order == 0:
-            query += " DESC"
+            query = query.format("DESC", "DESC")
+        else:
+            query = query.format("ASC", "ASC")
         
         self.cursor.execute(query)
         return self.cursor.fetchall()
@@ -146,6 +178,16 @@ class Database:
         self.cursor.execute("SELECT wallets.Name, SUM(income.Amount) AS Amount FROM income JOIN wallets ON income.Wallet = wallets.ID GROUP BY wallets.Name ORDER BY SUM(income.Amount) DESC")
         return self.cursor.fetchall()
     
+    def delete_income_by_id(self, id):
+        
+        self.cursor.execute("DELETE FROM income WHERE ID = %s", (id, ))
+        self.connection.commit()
+
+    def delete_income_by_wallet(self, id):
+
+        self.cursor.execute("DELETE FROM income WHERE wallet=%s", (id, ))
+        self.connection.commit()
+    
     def create_wallet(self, name):
         
         self.cursor.execute("INSERT INTO wallets (Name) VALUES (%s)", (name, ))
@@ -156,4 +198,22 @@ class Database:
         self.cursor.execute("SELECT Name FROM wallets ORDER BY ID")
         return self.cursor.fetchall()
     
+    def get_wallet_by_id(self, id):
+
+        self.cursor.execute("SELECT Name FROM wallets WHERE ID=%s", (id, ))
+        return self.cursor.fetchone()
     
+    def get_wallet_id_by_name(self, name):
+
+        self.cursor.execute("SELECT ID FROM wallets WHERE Name=%s", (name, ))
+        return self.cursor.fetchone()
+    
+    def update_wallet_by_id(self, id, name):
+
+        self.cursor.execute("UPDATE wallets SET Name=%s WHERE ID=%s", (name, id))
+        self.connection.commit()
+    
+    def delete_wallet_by_id(self, id):
+
+        self.cursor.execute("DELETE FROM wallets WHERE ID=%s", (id, ))
+        self.connection.commit() 

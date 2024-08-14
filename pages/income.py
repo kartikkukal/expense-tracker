@@ -1,9 +1,8 @@
 from tkinter import ttk
 import tkinter as tk
 
-import matplotlib as mpl
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 from dialogs.add_income import AddIncome
 from dialogs.create_wallet import CreateWallet
@@ -38,8 +37,9 @@ class Income:
 
         self.wallets.heading("#0", text="Wallet")
         self.wallets.column("#0", width=1)
+
         self.wallets.heading("balance", text="Balance")
-        self.wallets.column("balance", width=1)
+        self.wallets.column("balance", width=1, anchor=tk.CENTER)
 
         # Scrollbar for treeview
         scrollbar = ttk.Scrollbar(wallets, orient=tk.VERTICAL, command=self.wallets.yview)
@@ -119,12 +119,14 @@ class Income:
 
         self.root.income_update.append(self.update_income)
         
+        # Run update methods
         self.update_wallets()
         self.update_income()
         self.update_statistics()
 
     def income_selected(self, event):
 
+        # Get iid of record and run dialog
         id = self.income.identify_row(event.y)
         self.ViewIncome.run(id)
     
@@ -173,12 +175,15 @@ class Income:
 
             balance[wallet] = abs(self.balance[wallet])
 
+        # Split dictionary into keys and values
         labels = tuple(balance.keys())
         amount = tuple(balance.values())
 
+        # Delete old chart
         if self.chart is not None:
             self.chart.destroy()
-
+        
+        # Generate new chart
         figure = Figure(dpi=45, facecolor="#1c1c1c", figsize=(9, 4.4))        
         figure.add_subplot().pie(amount, radius=1.2, labels=labels)
 

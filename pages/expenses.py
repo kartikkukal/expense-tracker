@@ -77,29 +77,36 @@ class Expenses:
         self.AddExpense = AddExpense(root)
 
         # Add create transaction button
-        ttk.Button(controls, text="Add expense", command=self.AddExpense.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=25)
+        ttk.Button(controls, text="Add Expense", command=self.AddExpense.run, style="Accent.TButton").pack(side=tk.RIGHT, padx=25)
 
         # Register update method
         self.root.expenses_update.append(self.update_expenses)
         self.root.wallet_update.append(self.update_wallet(controls))
+
+        # Run update methods
         self.update_expenses()
     
     def expense_selected(self, event):
 
+        # Get iid of record and run dialog
         id = self.expenses.identify_row(event.y)
         self.ViewExpense.run(id)
     
     def update_wallet(self, controls):
 
+        # Return update method
         def update():
+            
+            # Delete old OptionMenu
             self.wallet_widget.destroy()
 
+            # Get wallet options list
             self.wallet_options = self.root.mysql.all_wallets()
             self.wallet_options = ["All"] + [value for row in self.wallet_options for value in row]
             self.wallet_select = tk.StringVar(value=self.wallet_options[0])
 
-            self.wallet_widget = ttk.OptionMenu(controls, self.wallet_select, self.wallet_options[0],
-                            *self.wallet_options, command=lambda _ : self.update_expenses())
+            # Create new OptionMenu
+            self.wallet_widget = ttk.OptionMenu(controls, self.wallet_select, self.wallet_options[0], *self.wallet_options, command=lambda _ : self.update_expenses())
             self.wallet_widget.pack(side=tk.LEFT, ipadx=8)
         
         return update
@@ -107,7 +114,7 @@ class Expenses:
     def update_expenses(self):
 
         # Get current expenses
-        records = self.root.mysql.all_expenses(self.sort_options.index(self.sort_selected.get()), self.time_range_options.index(self.time_range_select.get()), self.wallet_options.index(self.wallet_select.get()))
+        records = self.root.mysql.all_expenses(self.sort_options.index(self.sort_selected.get()), self.time_range_options.index(self.time_range_select.get()), self.wallet_select.get())
         
         # Update expenses treeview
         self.expenses.delete(*self.expenses.get_children())

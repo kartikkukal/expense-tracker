@@ -1,6 +1,9 @@
 from tkinter import ttk
 import tkinter as tk
 
+from dialogs.create_category import CreateCategory
+from dialogs.view_category import ViewCategory
+
 class Categories:
     
     def __init__(self, root):
@@ -33,40 +36,47 @@ class Categories:
 
         ttk.OptionMenu(controls, self.sort_selected, self.sort_options[0],
                         *self.sort_options, command=lambda _ : self.update_categories()).pack(side=tk.LEFT, ipadx=15)
+        
+        # Create create category dialog
+        self.CreateCategory = CreateCategory(root)
 
         # Create new category button
-        ttk.Button(controls, text="Create", style="Accent.TButton").pack(side=tk.RIGHT, padx=(0, 20))
+        ttk.Button(controls, text="Create", style="Accent.TButton", command=self.CreateCategory.run).pack(side=tk.RIGHT, padx=(0, 25))
 
         # Categories treeview
         self.categories = ttk.Treeview(categories, columns=("amount"))
-        self.categories.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.categories.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, ipady=10)
 
         self.categories.heading("#0", text="Category")
         self.categories.column("#0", width=1)
 
         self.categories.heading("amount", text="Amount")
-        self.categories.column("amount", width=1)
+        self.categories.column("amount", width=1, anchor=tk.CENTER)
 
         # Scrollbar for treeview
         scrollbar = ttk.Scrollbar(categories, orient=tk.VERTICAL, command=self.categories.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        self.ViewCategory = ViewCategory(root)
+
         # Bind left click event and scrollbar
         self.categories.configure(yscrollcommand=scrollbar.set)
-        self.categories.bind("<ButtonRelease-1>", self.category_selected)
+        self.categories.bind("<ButtonRelease-1>", self.category_clicked)
+        self.categories.bind("<Double-1>", self.category_selected)
 
-        self.clicked = False
+        self.treeview = False
 
         self.expenses = ttk.Label(self.container, text="Click on a category to see expenses.")
         self.expenses.pack(side=tk.TOP, expand=True)
 
         # Register update method
         self.root.expenses_update.append(self.update_categories)
+        self.root.category_update.append(self.update_categories)
         self.update_categories() 
     
-    def category_selected(self, _):
+    def category_clicked(self, _):
 
-        if not self.clicked:
+        if not self.treeview:
 
             self.expenses.destroy()
 
@@ -75,9 +85,10 @@ class Categories:
             self.expenses.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
             
             self.expenses.heading("#0", text="Note")
-            self.expenses.heading("amount", text="Amount")
+            self.expenses.column("#0", width=1)
 
-            self.expenses.column("amount", width=1)
+            self.expenses.heading("amount", text="Amount")
+            self.expenses.column("amount", width=1, anchor=tk.CENTER)
 
             # Scrollbar for treeview
             scrollbar = ttk.Scrollbar(self.container, orient=tk.VERTICAL, command=self.expenses.yview)
@@ -86,7 +97,7 @@ class Categories:
             # Bind scrollbar
             self.expenses.configure(yscrollcommand=scrollbar.set)
 
-            self.clicked = True
+            self.treeview = True
 
         # Get current focused item
         current = self.categories.focus()
@@ -95,11 +106,34 @@ class Categories:
         # Get expenses by category
         records = self.root.mysql.get_expense_by_category(category)
 
+        if len(records) == 0:
+            
+            self.expenses.destroy()
+
+            for child in self.container.winfo_children():
+                child.destroy()
+
+            self.expenses = ttk.Label(self.container, text="No expenses in category.")
+            self.expenses.pack(side=tk.TOP, expand=True)
+
+            self.treeview = False
+
+            return
+
         # Update expenses treeview
         self.expenses.delete(*self.expenses.get_children())
         
         for record in records:
             self.expenses.insert("", "end", text=record[2], values=(record[4], ))
+
+    def category_selected(self, _):
+
+        # Get current focused item
+        current = self.categories.focus()
+        category = self.categories.item(current)["text"]
+
+        # Run view wallet dialog
+        self.ViewCategory.run(category)
 
     def update_categories(self):
 

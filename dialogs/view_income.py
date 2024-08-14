@@ -8,11 +8,14 @@ class ViewIncome:
 
     def run(self, id):
 
+        if id == "":
+            return
+
         self.record = self.root.mysql.get_income_by_id(id)
 
         # Toplevel dialog frame
         self.dialog = tk.Toplevel()
-        self.dialog.title("Add Income")
+        self.dialog.title("View Income")
 
         self.dialog.geometry("640x240")
         self.dialog.resizable(False, False)
@@ -38,12 +41,12 @@ class ViewIncome:
         # Wallet entry
         ttk.Label(frame, text="Wallet:").grid(row=2, column=0, pady=(0, 10))
 
-        self.wallets = self.root.mysql.all_wallets()
-        self.wallets = [value for row in self.wallets for value in row]
-        self.wallet = tk.StringVar(value=self.wallets[self.record[3] - 1])
+        wallets = self.root.mysql.all_wallets()
+        wallets = [value for row in wallets for value in row]
+        self.wallet = tk.StringVar(value=self.root.mysql.get_wallet_by_id(self.record[3])[0])
         
-        ttk.OptionMenu(frame, self.wallet, self.wallets[self.record[3] - 1],
-                        *self.wallets).grid(row=2, column=1, sticky="EW", pady=(0, 10))
+        ttk.OptionMenu(frame, self.wallet, self.wallet,
+                        *wallets).grid(row=2, column=1, sticky="EW", pady=(0, 10))
         
         # Amount entry
         ttk.Label(frame, text="Amount:").grid(row=2, column=2, padx=8, pady=(0, 10))
@@ -92,7 +95,7 @@ class ViewIncome:
         button_frame = ttk.Frame(frame, padding="0 30 0 0")
         button_frame.grid(row=4, column=0, columnspan=5, sticky="EW",)
 
-        ttk.Button(button_frame, text="Delete", width=10).pack(side=tk.LEFT, padx=(10, 0))
+        ttk.Button(button_frame, text="Delete", width=10, command=self.delete_income).pack(side=tk.LEFT, padx=(10, 0))
 
         ttk.Button(button_frame, text="Cancel", width=10, command=self.dialog.destroy).pack(side=tk.RIGHT)
 
@@ -109,6 +112,15 @@ class ViewIncome:
         # Wait for dialog to close
         self.root.notebook.wait_window(self.dialog)
 
+    def delete_income(self):
+
+        # Delete record and update treeview
+        self.root.mysql.delete_income_by_id(self.record[0])
+        self.root.event_income_update()
+
+        # Close dialog
+        self.dialog.destroy()
+
     def update_income(self):
         
         try:
@@ -118,7 +130,7 @@ class ViewIncome:
 
             amount = self.amount.get()
             
-            wallet = self.wallets.index(self.wallet.get()) + 1
+            wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
 
             additional = self.additional.get()
 

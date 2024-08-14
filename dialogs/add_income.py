@@ -39,12 +39,12 @@ class AddIncome:
         # Wallet entry
         ttk.Label(frame, text="Wallet:").grid(row=2, column=0, pady=(0, 10))
 
-        self.wallets = self.root.mysql.all_wallets()
-        self.wallets = [value for row in self.wallets for value in row]
-        self.wallet = tk.StringVar(value=self.wallets[0])
+        wallets = self.root.mysql.all_wallets()
+        wallets = [value for row in wallets for value in row]
+        self.wallet = tk.StringVar(value=wallets[0])
         
-        ttk.OptionMenu(frame, self.wallet, self.wallets[0],
-                        *self.wallets).grid(row=2, column=1, sticky="EW", pady=(0, 10))
+        ttk.OptionMenu(frame, self.wallet, wallets[0],
+                        *wallets).grid(row=2, column=1, sticky="EW", pady=(0, 10))
         
         # Amount entry
         ttk.Label(frame, text="Amount:").grid(row=2, column=2, padx=8, pady=(0, 10))
@@ -114,7 +114,7 @@ class AddIncome:
 
             amount = self.amount.get()
             
-            wallet = self.wallets.index(self.wallet.get()) + 1
+            wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
 
             additional = self.additional.get()
 

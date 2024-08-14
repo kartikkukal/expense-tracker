@@ -1,7 +1,7 @@
 from tkinter import ttk
 import tkinter as tk
 
-class periodicals:
+class Periodicals:
     def __init__(self, root):
 
         # Initialize frame

@@ -1,6 +1,7 @@
-from pages.periodicals import periodicals
+import datetime
+from pages.periodicals import Periodicals
 from pages.categories import Categories
-from pages.overview import overview
+from pages.overview import Overview
 from pages.expenses import Expenses
 from pages.income import Income
 from database import Database
@@ -10,8 +11,10 @@ import tkinter as tk
 
 import sv_ttk
 
-class root:
+class ExpenseTracker:
     def __init__(self):
+
+        self.debug = True
 
         self.mysql = Database()
 
@@ -24,6 +27,7 @@ class root:
         self.expenses_update = []
         self.income_update = []
         self.wallet_update = []
+        self.category_update = []
 
         # Intialize root frame
         self.frame = ttk.Frame(self.window)
@@ -34,7 +38,7 @@ class root:
         self.notebook.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # Initialize overview
-        self.overview = overview(self)
+        self.overview = Overview(self)
         self.notebook.add(self.overview.frame, text="Overview")
 
         # Initialize expenses
@@ -50,12 +54,8 @@ class root:
         self.notebook.add(self.categories.frame, text="Categories")
 
         # Initialize periodicals
-        self.periodicals = periodicals(self)
+        self.periodicals = Periodicals(self)
         self.notebook.add(self.periodicals.frame, text="Periodicals")
-
-    def run(self):
-        sv_ttk.set_theme("dark")
-        self.window.mainloop()
     
     def event_expenses_update(self):
         for function in self.expenses_update:
@@ -69,8 +69,23 @@ class root:
         for function in self.wallet_update:
             function()
 
+    def event_category_update(self):
+        for function in self.category_update:
+            function()
+
+    def debug_message(self, tag, message):
+
+        if not self.debug:
+            return
+        
+        print(datetime.datetime.now().strftime("[%H:%M:%S]"), "[{}]: {}".format(tag, message))
+
+    def run(self):
+        sv_ttk.set_theme("dark")
+        self.window.mainloop()
+
 def __main__():
-    window = root()
+    window = ExpenseTracker()
     window.run()
 
 if __name__ == "__main__":

@@ -33,21 +33,21 @@ class AddExpense:
         # Wallet entry
         ttk.Label(frame, text="Wallet:").grid(row=1, column=0, pady=(0, 10))
 
-        self.wallets = self.root.mysql.all_wallets()
-        self.wallets = [value for row in self.wallets for value in row]
-        self.wallet = tk.StringVar(value=self.wallets[0])
+        wallets = self.root.mysql.all_wallets()
+        wallets = [value for row in wallets for value in row]
+        self.wallet = tk.StringVar(value=wallets[0])
         
-        ttk.OptionMenu(frame, self.wallet, self.wallets[0],
-                        *self.wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
+        ttk.OptionMenu(frame, self.wallet, wallets[0],
+                        *wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
 
         # Category entry
         ttk.Label(frame, text="Category:").grid(row=1, column=2, pady=(0, 10))
         
-        self.categories = self.root.mysql.all_categories()
-        self.categories = [value for row in self.categories for value in row]
+        categories = self.root.mysql.all_categories()
+        categories = [value for row in categories for value in row]
         self.category = tk.StringVar(value="")
         
-        (ttk.OptionMenu(frame, self.category, None, *self.categories)
+        (ttk.OptionMenu(frame, self.category, None, *categories)
          .grid(row=1, column=3, columnspan=2, sticky="EW", pady=(0, 10)))
     
         # Additional entry
@@ -105,8 +105,8 @@ class AddExpense:
 
         ttk.Button(button_frame, text="Cancel", width=10, command=self.dialog.destroy).pack(side=tk.RIGHT)
 
-        ttk.Button(button_frame, text="Create", width=10, 
-                   style="Accent.TButton", command=self.add_expense).pack(side=tk.RIGHT, padx=(0, 10))
+        ttk.Button(button_frame, text="Create", width=10, style="Accent.TButton", 
+                   command=self.add_expense).pack(side=tk.RIGHT, padx=(0, 10))
 
         # Show dialog
         self.dialog.transient(master=self.root.notebook)
@@ -123,9 +123,15 @@ class AddExpense:
                 raise ValueError("Note entry is empty")
 
             amount = self.amount.get()
+            if amount == "":
+                raise ValueError("Amount entry is empty")
             
-            wallet = self.wallets.index(self.wallet.get()) + 1
-            category = self.categories.index(self.category.get()) + 1
+            wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
+
+            if self.category.get() == "":
+                raise ValueError("Category entry is empty")
+            
+            category = self.root.mysql.get_category_id_by_name(self.category.get())[0]
 
             additional = self.additional.get()
 
@@ -136,7 +142,7 @@ class AddExpense:
             hour = int(self.hour.get())
             minute = int(self.minute.get())
 
-            date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
+            date_time = datetime.datetime(year, month, day, hour, minute)
 
             # Add expense record
             self.root.mysql.add_expense((date_time, note, wallet, category, amount, additional))
@@ -144,5 +150,6 @@ class AddExpense:
 
             self.dialog.destroy()
         
-        except Exception:
+        except Exception as exception:
+            self.root.debug_message("AddExpense", exception)
             return

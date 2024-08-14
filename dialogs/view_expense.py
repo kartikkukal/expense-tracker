@@ -36,20 +36,20 @@ class ViewExpense:
          # Wallet entry
         ttk.Label(frame, text="Wallet:").grid(row=1, column=0, pady=(0, 10))
 
-        self.wallets = self.root.mysql.all_wallets()
-        self.wallets = [value for row in self.wallets for value in row]
-        self.wallet = tk.StringVar(value=self.wallets[self.record[3] - 1])
+        wallets = self.root.mysql.all_wallets()
+        wallets = [value for row in wallets for value in row]
+        self.wallet = tk.StringVar(value=self.root.mysql.get_wallet_by_id(self.record[3])[0])
         
-        ttk.OptionMenu(frame, self.wallet, None, *self.wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
+        ttk.OptionMenu(frame, self.wallet, None, *wallets).grid(row=1, column=1, sticky="EW", pady=(0, 10))
         
         # Category entry
         ttk.Label(frame, text="Category:").grid(row=1, column=2, pady=(0, 10))
 
-        self.categories = self.root.mysql.all_categories()
-        self.categories = [value for row in self.categories for value in row]
-        self.category = tk.StringVar(value=self.categories[self.record[4] - 1])
+        categories = self.root.mysql.all_categories()
+        categories = [value for row in categories for value in row]
+        self.category = tk.StringVar(value=self.root.mysql.get_category_by_id(self.record[4])[0])
         
-        ttk.OptionMenu(frame, self.category, None, *self.categories).grid(row=1, column=3, columnspan=2, sticky="EW", pady=(0, 10))
+        ttk.OptionMenu(frame, self.category, None, *categories).grid(row=1, column=3, columnspan=2, sticky="EW", pady=(0, 10))
     
         # Additional entry
         ttk.Label(frame, text="Additional:").grid(row=2, column=0, pady=(0, 10))        
@@ -135,9 +135,11 @@ class ViewExpense:
             raise ValueError("Note entry is empty")
 
         amount = self.amount.get()
+
+        print(self.category.get())
         
-        wallet = self.wallets.index(self.wallet.get()) + 1
-        category = self.categories.index(self.category.get()) + 1
+        wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
+        category = self.root.mysql.get_category_id_by_name(self.category.get())[0]
 
         additional = self.additional.get()
 
