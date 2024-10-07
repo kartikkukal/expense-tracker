@@ -1,6 +1,7 @@
 import mysql.connector as sql
 
 import datetime
+import zoneinfo
 
 class Database:
     def __init__(self):
@@ -38,6 +39,9 @@ class Database:
                 self.cursor.execute("INSERT INTO wallets (Name) VALUES (%s)", (wallet, ))
             
             self.connection.commit()
+        
+        if ("periodicals", ) not in tables:
+            self.cursor.execute("CREATE TABLE periodicals (ID INT PRIMARY KEY AUTO_INCREMENT, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Category INT REFERENCES categories(ID), Frequency INT NOT NULL, Next DATETIME NOT NULL, Till DATETIME NOT NULL, Amount INT NOT NULL, Expense BOOLEAN NOT NULL)")
 
     def add_expense(self, record):
         
@@ -46,7 +50,7 @@ class Database:
     
     def all_expenses(self, order, range, wallet):
 
-        query = "SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses JOIN categories ON expenses.Category = categories.ID JOIN wallets ON expenses.Wallet = wallets.ID WHERE expenses.Date_Time > %s"
+        query = "SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses JOIN categories ON expenses.Category = categories.ID JOIN wallets ON expenses.Wallet = wallets.ID WHERE expenses.Date_Time BETWEEN %s AND %s"
 
         parameters = []
 
@@ -54,12 +58,12 @@ class Database:
             query += " AND wallets.Name = %s"
             parameters.insert(0, wallet)
 
-        ranges = (1, 7, 31, 90, 180, 365)
+        ranges = (1, 7, 31, 91, 182, 365)
 
         delta = datetime.timedelta(days=ranges[range])
-        time = datetime.datetime.now() - delta
 
-        parameters.insert(0, time)
+        parameters.insert(0, datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata")))
+        parameters.insert(0, datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata")) - delta)
 
         string = ""
         if order == 0:
@@ -78,22 +82,22 @@ class Database:
     
     def get_expense_by_category(self, name):
 
-        self.cursor.execute("SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses JOIN categories ON expenses.Category = categories.ID WHERE categories.Name = %s ORDER BY expenses.Date_Time DESC", (name, ))
+        self.cursor.execute("SELECT expenses.ID, expenses.Date_Time, expenses.Note, categories.Name AS Category, expenses.Amount, expenses.Additional FROM expenses JOIN categories ON expenses.Category = categories.ID WHERE categories.Name = %s AND expenses.Date_Time < %s ORDER BY expenses.Date_Time DESC", (name, datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata"))))
         return self.cursor.fetchall()
     
     def total_expense_by_category(self, order = 0):
 
-        query = "SELECT categories.Name, SUM(expenses.Amount) AS Amount FROM expenses JOIN categories ON expenses.Category = categories.ID GROUP BY categories.Name ORDER BY SUM(expenses.Amount)"
+        query = "SELECT categories.Name, SUM(expenses.Amount) AS Amount FROM expenses JOIN categories ON expenses.Category = categories.ID WHERE expenses.Date_Time < %s GROUP BY categories.Name ORDER BY SUM(expenses.Amount)"
         
         if order == 0:
             query += " DESC"
 
-        self.cursor.execute(query)
+        self.cursor.execute(query, (datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata")), ))
         return self.cursor.fetchall()
     
     def total_expense_by_wallet(self):
 
-        self.cursor.execute("SELECT wallets.Name, SUM(expenses.Amount) AS Amount FROM expenses JOIN wallets ON expenses.Wallet = wallets.ID GROUP BY wallets.Name ORDER BY SUM(expenses.Amount)")
+        self.cursor.execute("SELECT wallets.Name, SUM(expenses.Amount) AS Amount FROM expenses JOIN wallets ON expenses.Wallet = wallets.ID WHERE expenses.Date_Time < %s GROUP BY wallets.Name ORDER BY SUM(expenses.Amount)", (datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata")), ))
         return self.cursor.fetchall()
     
     def update_expense_by_id(self, id, record):
@@ -148,19 +152,19 @@ class Database:
     
     def add_income(self, record):
 
-        self.cursor.execute("INSERT INTO income (Date_Time, Note, Wallet, Amount, Additional) VALUES (%s, %s, %s, %s, %s)", (record[0], record[1], record[2], record[3], record[4]))
+        self.cursor.execute("INSERT INTO income (Date_Time, Note, Wallet, Amount, Additional) VALUES (%s, %s, %s, %s, %s)", record)
         self.connection.commit()
     
     def all_income(self, order):
 
-        query = "SELECT income.ID, income.Date_Time, income.Note, wallets.Name AS Wallet, income.Amount, income.Additional FROM income, wallets WHERE income.Wallet = wallets.ID ORDER BY income.Date_Time {}, income.ID {}"
+        query = "SELECT income.ID, income.Date_Time, income.Note, wallets.Name AS Wallet, income.Amount, income.Additional FROM income, wallets WHERE income.Wallet = wallets.ID AND income.Date_Time < %s ORDER BY income.Date_Time {}, income.ID {}"
 
         if order == 0:
             query = query.format("DESC", "DESC")
         else:
             query = query.format("ASC", "ASC")
         
-        self.cursor.execute(query)
+        self.cursor.execute(query, (datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata")), ))
         return self.cursor.fetchall()
     
     def get_income_by_id(self, id):
@@ -175,7 +179,7 @@ class Database:
     
     def total_income_by_wallet(self):
 
-        self.cursor.execute("SELECT wallets.Name, SUM(income.Amount) AS Amount FROM income JOIN wallets ON income.Wallet = wallets.ID GROUP BY wallets.Name ORDER BY SUM(income.Amount) DESC")
+        self.cursor.execute("SELECT wallets.Name, SUM(income.Amount) AS Amount FROM income JOIN wallets ON income.Wallet = wallets.ID WHERE income.Date_Time < %s GROUP BY wallets.Name ORDER BY SUM(income.Amount) DESC", (datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata")), ))
         return self.cursor.fetchall()
     
     def delete_income_by_id(self, id):
@@ -216,4 +220,60 @@ class Database:
     def delete_wallet_by_id(self, id):
 
         self.cursor.execute("DELETE FROM wallets WHERE ID=%s", (id, ))
-        self.connection.commit() 
+        self.connection.commit()
+
+    def add_periodical(self, record):
+
+        self.cursor.execute("INSERT INTO periodicals (Note, Wallet, Category, Frequency, Next, Till, Amount, Expense) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", record)
+        self.connection.commit()
+    
+    def income_periodicals(self, order, wallet):
+
+        query = "SELECT periodicals.ID, periodicals.Note, wallets.Name, periodicals.Frequency, periodicals.Next, periodicals.Till, periodicals.Amount FROM periodicals JOIN wallets ON periodicals.Wallet = wallets.ID WHERE Expense=0"
+
+        parameters = []
+
+        if wallet != "All":
+            query += " AND wallets.Name=%s"
+            parameters.append(wallet)
+        
+        query += " ORDER BY periodicals.Next"
+
+        if order == 1:
+            query += " DESC"
+        
+        self.cursor.execute(query, parameters)
+        return self.cursor.fetchall()
+    
+    def expense_periodicals(self, order, wallet):
+
+        query = "SELECT periodicals.ID, periodicals.Note, wallets.Name, categories.Name, periodicals.Frequency, periodicals.Next, periodicals.Till, periodicals.Amount FROM periodicals JOIN wallets ON periodicals.Wallet = wallets.ID JOIN categories ON periodicals.Category = categories.ID WHERE Expense=1"
+
+        parameters = []
+
+        if wallet != "All":
+            query += " AND wallets.Name=%s"
+            parameters.append(wallet)
+        
+        query += " ORDER BY periodicals.Next"
+
+        if order == 1:
+            query += " DESC"
+        
+        self.cursor.execute(query, parameters)
+        return self.cursor.fetchall()
+
+    def get_periodical_by_id(self, id):
+        
+        self.cursor.execute("SELECT * FROM periodicals WHERE ID=%s", (id, ))
+        return self.cursor.fetchone()
+    
+    def update_periodical_by_id(self, id, record):
+        
+        self.cursor.execute("UPDATE periodicals SET Note=%s, Wallet=%s, Category=%s, Frequency=%s, Next=%s, Till=%s, Amount=%s, Expense=%s WHERE ID=%s", (record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], id))
+        self.connection.commit()
+    
+    def delete_periodical_by_id(self, id):
+        
+        self.cursor.execute("DELETE FROM periodicals WHERE ID=%s", (id, ))
+        self.connection.commit()

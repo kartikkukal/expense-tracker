@@ -36,7 +36,7 @@ class ViewCategory:
 
         self.Confirmation = Confirmation(self.root, "This operation will delete all records related to this category. Are you sure you want to delete this category?", self.delete_category)
 
-        ttk.Button(button_frame, text="Delete", command=self.Confirmation.run, width=10).pack(side=tk.LEFT, padx=(12, 0))
+        ttk.Button(button_frame, text="Delete", command=self.Confirmation.show, width=10).pack(side=tk.LEFT, padx=(12, 0))
         ttk.Button(button_frame, text="Cancel", command=self.dialog.destroy, width=10).pack(side=tk.RIGHT, padx=(10, 0))
         ttk.Button(button_frame, text="Update", style="Accent.TButton", command=self.update_category, width=10).pack(side=tk.RIGHT)
 
@@ -62,6 +62,7 @@ class ViewCategory:
         name = self.name_entry.get()
 
         if name == "":
+            self.root.error.show("Name entry is empty")
             return
         
         self.root.mysql.update_category_by_id(self.id, name)

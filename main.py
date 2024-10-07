@@ -1,4 +1,7 @@
 import datetime
+
+from dialogs.error import Error
+
 from pages.periodicals import Periodicals
 from pages.categories import Categories
 from pages.overview import Overview
@@ -28,6 +31,7 @@ class ExpenseTracker:
         self.income_update = []
         self.wallet_update = []
         self.category_update = []
+        self.periodicals_update = []
 
         # Intialize root frame
         self.frame = ttk.Frame(self.window)
@@ -56,6 +60,8 @@ class ExpenseTracker:
         # Initialize periodicals
         self.periodicals = Periodicals(self)
         self.notebook.add(self.periodicals.frame, text="Periodicals")
+
+        self.error = Error(self)
     
     def event_expenses_update(self):
         for function in self.expenses_update:
@@ -71,6 +77,10 @@ class ExpenseTracker:
 
     def event_category_update(self):
         for function in self.category_update:
+            function()
+    
+    def event_periodicals_update(self):
+        for function in self.periodicals_update:
             function()
 
     def debug_message(self, tag, message):

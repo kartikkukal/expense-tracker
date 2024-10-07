@@ -1,6 +1,8 @@
 from tkinter import ttk
 import tkinter as tk
 
+import datetime
+
 class ViewIncome:
 
     def __init__(self, root):
@@ -45,7 +47,7 @@ class ViewIncome:
         wallets = [value for row in wallets for value in row]
         self.wallet = tk.StringVar(value=self.root.mysql.get_wallet_by_id(self.record[3])[0])
         
-        ttk.OptionMenu(frame, self.wallet, self.wallet,
+        ttk.OptionMenu(frame, self.wallet, None,
                         *wallets).grid(row=2, column=1, sticky="EW", pady=(0, 10))
         
         # Amount entry
@@ -129,26 +131,21 @@ class ViewIncome:
                 raise ValueError("Note entry is empty")
 
             amount = self.amount.get()
+            if not amount.isnumeric():
+                raise ValueError("Amount entry is not numeric")
             
             wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
 
             additional = self.additional.get()
 
-            year = int(self.year.get())
-            month = int(self.month.get())
-            day = int(self.day.get())
+            date_time = datetime.datetime(int(self.year.get()), int(self.month.get()), int(self.day.get()), int(self.hour.get()), int(self.minute.get()))
 
-            hour = int(self.hour.get())
-            minute = int(self.minute.get())
-
-            date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
-
-            # Add expense record
+            # Update income record
             self.root.mysql.update_income_by_id(self.record[0], (date_time, note, wallet, amount, additional))
             self.root.event_income_update()
 
             self.dialog.destroy()
         
-        except Exception as e:
-            print(e)
+        except Exception as exception:
+            self.root.error.show(exception)
             return

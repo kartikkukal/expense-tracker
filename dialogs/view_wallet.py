@@ -36,7 +36,7 @@ class ViewWallet:
 
         self.Confirmation = Confirmation(self.root, "This operation will delete all records related to this wallet. Are you sure you want to delete this wallet?", self.delete_wallet)
 
-        ttk.Button(button_frame, text="Delete", command=self.Confirmation.run, width=10).pack(side=tk.LEFT, padx=(12, 0))
+        ttk.Button(button_frame, text="Delete", command=self.Confirmation.show, width=10).pack(side=tk.LEFT, padx=(12, 0))
         ttk.Button(button_frame, text="Cancel", command=self.dialog.destroy, width=10).pack(side=tk.RIGHT, padx=(10, 0))
         ttk.Button(button_frame, text="Update", style="Accent.TButton", command=self.update_wallet, width=10).pack(side=tk.RIGHT)
 
@@ -68,6 +68,7 @@ class ViewWallet:
         name = self.name_entry.get()
 
         if name == "":
+            self.root.error.show("Name entry is empty")
             return
         
         self.root.mysql.update_wallet_by_id(self.id, name)

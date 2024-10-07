@@ -37,6 +37,7 @@ class CreateWallet:
     def create_wallet(self):
 
         if self.name_entry.get() == "":
+            self.root.error.show("Name entry is empty")
             return
         
         self.root.mysql.create_wallet(self.name_entry.get())

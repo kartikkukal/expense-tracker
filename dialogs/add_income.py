@@ -113,19 +113,14 @@ class AddIncome:
                 raise ValueError("Note entry is empty")
 
             amount = self.amount.get()
+            if not amount.isnumeric():
+                raise ValueError("Amount entry is not numeric")
             
             wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
 
             additional = self.additional.get()
 
-            year = int(self.year.get())
-            month = int(self.month.get())
-            day = int(self.day.get())
-
-            hour = int(self.hour.get())
-            minute = int(self.minute.get())
-
-            date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
+            date_time = datetime.datetime(int(self.year.get()), int(self.month.get()), int(self.day.get()), int(self.hour.get()), int(self.minute.get()))
 
             # Add expense record
             self.root.mysql.add_income((date_time, note, wallet, amount, additional))
@@ -133,5 +128,6 @@ class AddIncome:
 
             self.dialog.destroy()
         
-        except:
+        except Exception as exception:
+            self.root.error.show(exception)
             return

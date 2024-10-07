@@ -30,7 +30,7 @@ class Expenses:
         # Time range drop down
         ttk.Label(controls, text="Time range: ").pack(side=tk.LEFT, padx=20)
 
-        self.time_range_options = ("1 day", "7 days", "31 days", "90 days", "180 days", "1 Year")
+        self.time_range_options = ("1 Day", "7 Days", "1 Month", "3 Months", "6 Months", "1 Year")
         self.time_range_select = tk.StringVar(value=self.time_range_options[2])
 
         ttk.OptionMenu(controls, self.time_range_select, self.time_range_options[2],

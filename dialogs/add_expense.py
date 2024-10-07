@@ -123,26 +123,19 @@ class AddExpense:
                 raise ValueError("Note entry is empty")
 
             amount = self.amount.get()
-            if amount == "":
-                raise ValueError("Amount entry is empty")
+            if not amount.isnumeric():
+                raise ValueError("Amount entry is not numeric")
             
             wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
 
             if self.category.get() == "":
-                raise ValueError("Category entry is empty")
+                raise ValueError("Category selection is empty")
             
             category = self.root.mysql.get_category_id_by_name(self.category.get())[0]
 
             additional = self.additional.get()
 
-            year = int(self.year.get())
-            month = int(self.month.get())
-            day = int(self.day.get())
-
-            hour = int(self.hour.get())
-            minute = int(self.minute.get())
-
-            date_time = datetime.datetime(year, month, day, hour, minute)
+            date_time = datetime.datetime(int(self.year.get()), int(self.month.get()), int(self.day.get()), int(self.hour.get()), int(self.minute.get()))
 
             # Add expense record
             self.root.mysql.add_expense((date_time, note, wallet, category, amount, additional))
@@ -151,5 +144,5 @@ class AddExpense:
             self.dialog.destroy()
         
         except Exception as exception:
-            self.root.debug_message("AddExpense", exception)
+            self.root.error.show(exception)
             return

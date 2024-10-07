@@ -1,6 +1,8 @@
 from tkinter import ttk
 import tkinter as tk
 
+import datetime
+
 class ViewExpense:
 
     def __init__(self, root):
@@ -129,31 +131,33 @@ class ViewExpense:
         self.dialog.destroy()
 
     def update_transcation(self):
-            
-        note = self.note.get()
-        if note == "":
-            raise ValueError("Note entry is empty")
-
-        amount = self.amount.get()
-
-        print(self.category.get())
         
-        wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
-        category = self.root.mysql.get_category_id_by_name(self.category.get())[0]
+        try:
+            note = self.note.get()
+            if note == "":
+                raise ValueError("Note entry is empty")
 
-        additional = self.additional.get()
+            amount = self.amount.get()
+            if not amount.isnumeric():
+                raise ValueError("Amount entry is not numeric")
+            
+            wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
 
-        year = int(self.year.get())
-        month = int(self.month.get())
-        day = int(self.day.get())
+            if self.category.get() == "":
+                raise ValueError("Category selection is empty")
+            
+            category = self.root.mysql.get_category_id_by_name(self.category.get())[0]
 
-        hour = int(self.hour.get())
-        minute = int(self.minute.get())
+            additional = self.additional.get()
 
-        date_time = "{}/{}/{} {}:{}:00".format(year, month, day, hour, minute)
+            date_time = datetime.datetime(int(self.year.get()), int(self.month.get()), int(self.day.get()), int(self.hour.get()), int(self.minute.get()))
 
-        # Update expense record
-        self.root.mysql.update_expense_by_id(self.record[0], (date_time, note, wallet, category, amount, additional))
-        self.root.event_expenses_update()
+            # Update expense record
+            self.root.mysql.update_expense_by_id(self.record[0], (date_time, note, wallet, category, amount, additional))
+            self.root.event_expenses_update()
 
-        self.dialog.destroy()
+            self.dialog.destroy()
+        
+        except Exception as exception:
+            self.root.error.show(exception)
+            return

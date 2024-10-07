@@ -37,6 +37,7 @@ class CreateCategory:
     def create_category(self):
 
         if self.name_entry.get() == "":
+            self.root.error.show("Name entry is empty")
             return
         
         self.root.mysql.create_category(self.name_entry.get())
