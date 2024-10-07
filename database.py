@@ -227,6 +227,11 @@ class Database:
         self.cursor.execute("INSERT INTO periodicals (Note, Wallet, Category, Frequency, Next, Till, Amount, Expense) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", record)
         self.connection.commit()
     
+    def upcoming_periodicals(self):
+
+        self.cursor.execute("SELECT Note, Next FROM periodicals ORDER BY Next DESC")
+        return self.cursor.fetchall()
+    
     def income_periodicals(self, order, wallet):
 
         query = "SELECT periodicals.ID, periodicals.Note, wallets.Name, periodicals.Frequency, periodicals.Next, periodicals.Till, periodicals.Amount FROM periodicals JOIN wallets ON periodicals.Wallet = wallets.ID WHERE Expense=0"

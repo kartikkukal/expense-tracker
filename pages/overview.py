@@ -25,12 +25,12 @@ class Overview:
         self.categories = ttk.LabelFrame(self.frame, text="Expenses by catergory")
         balance = ttk.Labelframe(self.frame, text="Current balance")
         self.wallets = ttk.LabelFrame(self.frame, text="Expenses by wallet")
-        periodicals = ttk.LabelFrame(self.frame, text="Periodicals")
+        self.periodicals = ttk.LabelFrame(self.frame, text="Periodicals")
         
         self.categories.grid(row=0, column=0, padx=5, pady=5, sticky="news")
         balance.grid(row=0, column=1, padx=5, pady=5, sticky="news")
         self.wallets.grid(row=1, column=0, padx=5, pady=5, sticky="news")
-        periodicals.grid(row=1, column=1, padx=5, pady=5, sticky="news")
+        self.periodicals.grid(row=1, column=1, padx=5, pady=5, sticky="news")
 
         # Configure categories grid
         self.categories.rowconfigure(0, weight=1)
@@ -59,9 +59,13 @@ class Overview:
         # Generate categories chart
         self.wallets_chart = None
         self.wallets_chart_update()
-        
+
+        self.periodicals_table = None
+        self.periodicals_update()
 
         # Register update methods
+        self.root.periodicals_update.append(self.periodicals_update)
+
         self.root.expenses_update.append(self.categories_chart_update)
         self.root.expenses_update.append(self.wallets_chart_update)
 
@@ -140,3 +144,38 @@ class Overview:
 
         categories_chart = FigureCanvasTkAgg(figure, self.wallets).get_tk_widget()
         categories_chart.grid(row=0, column=0, pady=5)
+    
+    def periodicals_update(self):\
+    
+        records = self.root.mysql.upcoming_periodicals()
+
+        if len(records) == 0:
+
+            if not self.periodicals_table == None:
+                self.periodicals_table.destroy()
+                self.periodicals_table = None
+
+            ttk.Label(self.periodicals, text="No periodicals", font=("Arial", 16)).pack(anchor=tk.CENTER, expand=True)
+
+            return
+        
+        if self.periodicals_table == None:
+
+            for child in self.periodicals.winfo_children():
+                child.destroy()
+
+            style = ttk.Style()
+            style.layout("Edgeless.Treeview", [("Edgeless.Treeview.treearea", {"sticky": "nsew"})])
+
+            self.periodicals_table = ttk.Treeview(self.periodicals, columns=("next"), style="Edgeless.Treeview")
+            self.periodicals_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+            self.periodicals_table.heading("#0", text="Note")
+
+            self.periodicals_table.heading("next", text="Next")
+            self.periodicals_table.column("next", width=40, anchor=tk.CENTER)
+            
+            self.periodicals_table.delete(*self.periodicals_table.get_children())        
+        
+        for record in records:
+            self.periodicals_table.insert("", "end", text=record[0], values=(record[1].date(), ))
