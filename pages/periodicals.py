@@ -131,7 +131,8 @@ class Periodicals:
 
         self.expenses.configure(yscrollcommand=scrollbar.set)
         self.expenses.bind("<Double-1>", self.expense_selected)
-
+        
+        self.root.periodicals_update.insert(0, self.calculate_periodicals)
         self.root.periodicals_update.append(self.update_periodicals)
         
         self.update_periodicals()
@@ -154,12 +155,13 @@ class Periodicals:
         id = self.expenses.identify_row(event.y)
         self.ViewPeriodicalExpense.run(id)
     
-    def update_periodicals(self):
+    def calculate_periodicals(self):
 
         current = datetime.datetime.now()
 
-        frequency_string = ("Daily", "Weekly", "Monthly", "Yearly")
         frequencies = (relativedelta(days=1), relativedelta(weeks=1), relativedelta(months=1), relativedelta(years=1))
+
+        # Calculating income periodicals
 
         records = self.root.mysql.income_periodicals(self.sort_options.index(self.sort_selected_income.get()), self.wallet_select_income.get())
 
@@ -177,14 +179,9 @@ class Periodicals:
                 return
 
             self.root.mysql.update_periodical_by_id(record[0], (record[1], self.root.mysql.get_wallet_id_by_name(record[2])[0], None, record[3], next, record[5], record[6], False))
-
-        records = self.root.mysql.income_periodicals(self.sort_options.index(self.sort_selected_income.get()), self.wallet_select_income.get())
-
-        self.income.delete(*self.income.get_children())
-
-        for record in records:
-            self.income.insert("", "end", iid=record[0], text=record[4].date(), values=(record[1], record[2], frequency_string[record[3]], record[6]))
         
+        # Calculating expense periodicals
+
         records = self.root.mysql.expense_periodicals(self.sort_options.index(self.sort_selected_expenses.get()), self.wallet_select_expenses.get())
 
         for record in records:
@@ -193,7 +190,7 @@ class Periodicals:
             next = record[5]
 
             while next <= record[6] and next <= current:
-                self.root.mysql.add_expense((next, record[1], self.root.mysql.get_wallet_id_by_name(record[2])[0], self.root.mysql.get_category_id_by_name(record[3])[0], record[7], "Added periodical income."))
+                self.root.mysql.add_expense((next, record[1], self.root.mysql.get_wallet_id_by_name(record[2])[0], self.root.mysql.get_category_id_by_name(record[3])[0], record[7], "Added periodical expense."))
                 next += frequency
             
             if next > record[6]:
@@ -201,10 +198,21 @@ class Periodicals:
                 return
 
             self.root.mysql.update_periodical_by_id(record[0], (record[1], self.root.mysql.get_wallet_id_by_name(record[2])[0], self.root.mysql.get_category_id_by_name(record[3])[0], record[4], next, record[6], record[7], True))
+    
+    def update_periodicals(self):
 
+        frequencies = ("Daily", "Weekly", "Monthly", "Yearly")
+
+        records = self.root.mysql.income_periodicals(self.sort_options.index(self.sort_selected_income.get()), self.wallet_select_income.get())
+
+        self.income.delete(*self.income.get_children())
+
+        for record in records:
+            self.income.insert("", "end", iid=record[0], text=record[4].date(), values=(record[1], record[2], frequencies[record[3]], record[6]))
+        
         records = self.root.mysql.expense_periodicals(self.sort_options.index(self.sort_selected_expenses.get()), self.wallet_select_expenses.get())
 
         self.expenses.delete(*self.expenses.get_children())
 
         for record in records:
-            self.expenses.insert("", "end", iid=record[0], text=record[5].date(), values=(record[1], record[2], frequency_string[record[4]], record[7]))
+            self.expenses.insert("", "end", iid=record[0], text=record[5].date(), values=(record[1], record[2], frequencies[record[4]], record[7]))

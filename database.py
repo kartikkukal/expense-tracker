@@ -13,7 +13,7 @@ class Database:
         tables = self.cursor.fetchall()
 
         if ("expenses", ) not in tables:
-            self.cursor.execute("CREATE TABLE expenses (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Category INT REFERENCES categories(ID), Amount INT NOT NULL, Additional VARCHAR(100))")
+            self.cursor.execute("CREATE TABLE expenses (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Category INT REFERENCES categories(ID), Amount INT NOT NULL, Additional VARCHAR(500))")
         
         if ("categories", ) not in tables:
             self.cursor.execute("CREATE TABLE categories (ID INT PRIMARY KEY AUTO_INCREMENT, Name VARCHAR(100) NOT NULL UNIQUE)")
@@ -27,7 +27,7 @@ class Database:
             self.connection.commit()
 
         if ("income", ) not in tables:
-            self.cursor.execute("CREATE TABLE income (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Amount INT NOT NULL, Additional VARCHAR(100))")
+            self.cursor.execute("CREATE TABLE income (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Amount INT NOT NULL, Additional VARCHAR(500))")
         
         if ("wallets", ) not in tables:
             self.cursor.execute("CREATE TABLE wallets (ID INT PRIMARY KEY AUTO_INCREMENT, Name VARCHAR(100) NOT NULL UNIQUE)")

@@ -175,7 +175,7 @@ class Overview:
             self.periodicals_table.heading("next", text="Next")
             self.periodicals_table.column("next", width=40, anchor=tk.CENTER)
             
-            self.periodicals_table.delete(*self.periodicals_table.get_children())        
-        
+        self.periodicals_table.delete(*self.periodicals_table.get_children())
+
         for record in records:
             self.periodicals_table.insert("", "end", text=record[0], values=(record[1].date(), ))
