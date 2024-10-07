@@ -28,6 +28,15 @@ class Periodicals:
         controls = ttk.Frame(income)
         controls.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
 
+        # Next sorting drop down
+        ttk.Label(controls, text="Next: ").pack(side=tk.LEFT, padx=20)
+
+        self.sort_options = ("Closest", "Farthest")
+
+        self.sort_selected_income = tk.StringVar(value=self.sort_options[0])
+
+        ttk.OptionMenu(controls, self.sort_selected_income, self.sort_options[0], *self.sort_options, command=lambda _ : self.update_periodicals()).pack(side=tk.LEFT, ipadx=8)
+
         # Wallet drop down
         ttk.Label(controls, text="Wallet: ").pack(side=tk.LEFT, padx=20)
 
@@ -39,22 +48,15 @@ class Periodicals:
         self.wallet_widget_income = ttk.OptionMenu(controls, self.wallet_select_income, self.wallet_options[0], *self.wallet_options, command=lambda _ : self.update_periodicals())
         self.wallet_widget_income.pack(side=tk.LEFT, ipadx=8)
 
-        # Next sorting drop down
-        ttk.Label(controls, text="Next: ").pack(side=tk.LEFT, padx=20)
-
-        self.sort_options = ("Closest", "Farthest")
-
-        self.sort_selected_income = tk.StringVar(value=self.sort_options[0])
-
-        ttk.OptionMenu(controls, self.sort_selected_income, self.sort_options[0], *self.sort_options, command=lambda _ : self.update_periodicals()).pack(side=tk.LEFT, ipadx=8)
-
-        # Refresh button
-        ttk.Button(controls, text="Refresh", command=self.refresh).pack(side=tk.LEFT, padx=25)
+        self.root.wallet_update.append(self.update_income_wallets(controls))
 
         self.AddPeriodicalIncome = AddPeriodicalIncome(root)
 
         # Add income periodical button
         ttk.Button(controls, text="Add Income", style="Accent.TButton", command=self.AddPeriodicalIncome.run).pack(side=tk.RIGHT, padx=25)
+
+        # Refresh button
+        ttk.Button(controls, text="Refresh", command=self.refresh).pack(side=tk.RIGHT)
 
         income.grid(row=0, column=0, padx=5, pady=5, sticky="news")
         expenses.grid(row=1, column=0, padx=5, pady=5, sticky="news")
@@ -87,14 +89,6 @@ class Periodicals:
         controls = ttk.Frame(expenses)
         controls.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
 
-        # Wallet drop down
-        ttk.Label(controls, text="Wallet: ").pack(side=tk.LEFT, padx=20)
-
-        self.wallet_select_expenses = tk.StringVar(value=self.wallet_options[0])
-
-        self.wallet_widget_expenses = ttk.OptionMenu(controls, self.wallet_select_expenses, self.wallet_options[0], *self.wallet_options, command=lambda _ : self.update_periodicals())
-        self.wallet_widget_expenses.pack(side=tk.LEFT, ipadx=8)
-
         # Next sorting drop down
         ttk.Label(controls, text="Next: ").pack(side=tk.LEFT, padx=20)
 
@@ -103,6 +97,16 @@ class Periodicals:
         ttk.OptionMenu(controls, self.sort_selected_expenses, self.sort_options[0], *self.sort_options, command=lambda _ : self.update_periodicals()).pack(side=tk.LEFT, ipadx=8)
 
         self.AddPeriodicalExpense = AddPeriodicalExpense(root)
+
+        # Wallet drop down
+        ttk.Label(controls, text="Wallet: ").pack(side=tk.LEFT, padx=20)
+
+        self.wallet_select_expenses = tk.StringVar(value=self.wallet_options[0])
+
+        self.wallet_widget_expenses = ttk.OptionMenu(controls, self.wallet_select_expenses, self.wallet_options[0], *self.wallet_options, command=lambda _ : self.update_periodicals())
+        self.wallet_widget_expenses.pack(side=tk.LEFT, ipadx=8)
+
+        self.root.wallet_update.append(self.update_expenses_wallets(controls))
 
         # Add expense periodical drop down
         ttk.Button(controls, text="Add Expense", style="Accent.TButton", command=self.AddPeriodicalExpense.run).pack(side=tk.RIGHT, padx=25)
@@ -136,6 +140,38 @@ class Periodicals:
         self.root.periodicals_update.append(self.update_periodicals)
         
         self.update_periodicals()
+    
+    def update_income_wallets(self, controls):
+        
+        def update():
+
+            self.wallet_widget_income.destroy()
+
+            self.wallet_options = self.root.mysql.all_wallets()
+            self.wallet_options = ["All"] + [value for row in self.wallet_options for value in row]
+
+            self.wallet_select_income = tk.StringVar(value=self.wallet_options[0])
+
+            self.wallet_widget_income = ttk.OptionMenu(controls, self.wallet_select_income, self.wallet_options[0], *self.wallet_options, command=lambda _ : self.update_periodicals())
+            self.wallet_widget_income.pack(side=tk.LEFT, ipadx=8)
+        
+        return update
+
+    def update_expenses_wallets(self, controls):
+
+        def update():
+
+            self.wallet_widget_expenses.destroy()
+
+            self.wallet_options = self.root.mysql.all_wallets()
+            self.wallet_options = ["All"] + [value for row in self.wallet_options for value in row]
+
+            self.wallet_select_expenses = tk.StringVar(value=self.wallet_options[0])
+
+            self.wallet_widget_expenses = ttk.OptionMenu(controls, self.wallet_select_expenses, self.wallet_options[0], *self.wallet_options, command=lambda _ : self.update_periodicals())
+            self.wallet_widget_expenses.pack(side=tk.LEFT, ipadx=8)
+        
+        return update
     
     def refresh(self):
 
