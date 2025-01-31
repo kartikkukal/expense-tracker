@@ -112,11 +112,9 @@ class Income:
         self.root.expenses_update.append(self.update_wallets)
         self.root.wallet_update.append(self.update_wallets)
         self.root.income_update.append(self.update_wallets)
-
         self.root.expenses_update.append(self.update_statistics)
         self.root.wallet_update.append(self.update_statistics)
         self.root.income_update.append(self.update_statistics)
-
         self.root.income_update.append(self.update_income)
         
         # Run update methods

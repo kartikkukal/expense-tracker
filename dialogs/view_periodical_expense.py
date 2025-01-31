@@ -150,12 +150,10 @@ class ViewPeriodicalExpense:
                 raise ValueError("Amount entry is not numeric")
             
             wallet = self.root.mysql.get_wallet_id_by_name(self.wallet.get())[0]
-            
             if self.category.get() == "":
                 raise ValueError("Category selection is empty")
             
             category = self.root.mysql.get_category_id_by_name(self.category.get())[0]
-
             frequency = self.frequency_options.index(self.frequency_selected.get())
 
             from_date_time = datetime.datetime(int(self.from_year.get()), int(self.from_month.get()), int(self.from_day.get()), tzinfo=zoneinfo.ZoneInfo("Asia/Kolkata"))

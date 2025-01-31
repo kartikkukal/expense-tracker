@@ -154,5 +154,3 @@ class Categories:
 
         for category in records:
             self.categories.insert("", "end", text=category, values=(records[category], ))
-
-

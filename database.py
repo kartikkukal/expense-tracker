@@ -6,15 +6,12 @@ import zoneinfo
 class Database:
     def __init__(self):
 
-        self.connection = sql.connect(host="localhost", user="main", passwd="", database="main")
+        self.connection = sql.connect(host="localhost", user="primary", passwd="jKcThMHtbSuxNrULaGFfkJ", database="main")
         self.cursor = self.connection.cursor()
 
         self.cursor.execute("SHOW TABLES")
         tables = self.cursor.fetchall()
 
-        if ("expenses", ) not in tables:
-            self.cursor.execute("CREATE TABLE expenses (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Category INT REFERENCES categories(ID), Amount INT NOT NULL, Additional VARCHAR(500))")
-        
         if ("categories", ) not in tables:
             self.cursor.execute("CREATE TABLE categories (ID INT PRIMARY KEY AUTO_INCREMENT, Name VARCHAR(100) NOT NULL UNIQUE)")
 
@@ -26,9 +23,6 @@ class Database:
             
             self.connection.commit()
 
-        if ("income", ) not in tables:
-            self.cursor.execute("CREATE TABLE income (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Amount INT NOT NULL, Additional VARCHAR(500))")
-        
         if ("wallets", ) not in tables:
             self.cursor.execute("CREATE TABLE wallets (ID INT PRIMARY KEY AUTO_INCREMENT, Name VARCHAR(100) NOT NULL UNIQUE)")
 
@@ -39,6 +33,12 @@ class Database:
                 self.cursor.execute("INSERT INTO wallets (Name) VALUES (%s)", (wallet, ))
             
             self.connection.commit()
+
+        if ("expenses", ) not in tables:
+            self.cursor.execute("CREATE TABLE expenses (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Category INT REFERENCES categories(ID), Amount INT NOT NULL, Additional VARCHAR(500))")
+
+        if ("income", ) not in tables:
+            self.cursor.execute("CREATE TABLE income (ID INT PRIMARY KEY AUTO_INCREMENT, Date_Time DATETIME NOT NULL, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Amount INT NOT NULL, Additional VARCHAR(500))")
         
         if ("periodicals", ) not in tables:
             self.cursor.execute("CREATE TABLE periodicals (ID INT PRIMARY KEY AUTO_INCREMENT, Note VARCHAR(100) NOT NULL, Wallet INT REFERENCES wallets(ID), Category INT REFERENCES categories(ID), Frequency INT NOT NULL, Next DATETIME NOT NULL, Till DATETIME NOT NULL, Amount INT NOT NULL, Expense BOOLEAN NOT NULL)")
