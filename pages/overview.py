@@ -178,4 +178,4 @@ class Overview:
         self.periodicals_table.delete(*self.periodicals_table.get_children())
 
         for record in records:
-            self.periodicals_table.insert("", "end", text=record[0], values=(record[1].date(), ))
+            self.periodicals_table.insert("", 0, text=record[0], values=(record[1].date(), ))
